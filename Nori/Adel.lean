@@ -165,15 +165,51 @@ def duality_functor : Adel (Cᵒᵖ) ⥤ (Adel C)ᵒᵖ :=
   Quotient.lift _ (quotientOp C) (fun _ _ _ _ ↦ (quotientOp_map_eq_iff _ _).mp)
 
 instance : (duality_functor C).Full := by
-  dsimp [duality_functor]
-  refine {map_surjective u := ?_}
-  use (quotient (Cᵒᵖ)).map ((quotientOp C).preimage u)
-  dsimp [quotientOp]
-  have eq : (duality_aux C).inverse.map ((quotient Cᵒᵖ).map ((quotientOp C).preimage u)) = u := sorry
+  have : (quotient (Cᵒᵖ) ⋙ duality_functor C).Full := Functor.Full.of_iso (Quotient.lift.isLift
+    homotopic (quotientOp C)  (fun _ _ _ _ ↦ (quotientOp_map_eq_iff _ _).mp)).symm
+  refine {map_surjective {X Y} u := ?_}
+  set e := (quotient _).objObjPreimageIso X
+  set f := (quotient _).objObjPreimageIso Y
+  set v := (quotient (Cᵒᵖ) ⋙ duality_functor C).preimage
+    ((duality_functor C).map e.hom ≫ u ≫ (duality_functor C).map f.inv)
+  use e.inv ≫ (quotient _).map v ≫ f.hom
+  dsimp
+  simp only [map_comp]
+  conv_lhs => congr; rfl; congr
+              rw [← Functor.comp_map, map_preimage]
+  simp
 
+instance : (duality_functor C).EssSurj where
+  mem_essImage X := by
+    have : (quotient (Cᵒᵖ) ⋙ duality_functor C).EssSurj :=
+      Functor.essSurj_of_iso (Quotient.lift.isLift homotopic (quotientOp C)
+      (fun _ _ _ _ ↦ (quotientOp_map_eq_iff _ _).mp)).symm
+    use (quotient (Cᵒᵖ)).obj ((quotient (Cᵒᵖ) ⋙ duality_functor C).objPreimage X)
+    exact Nonempty.intro ((quotient (Cᵒᵖ) ⋙ duality_functor C).objObjPreimageIso X)
 
+instance : (duality_functor C).Faithful where
+  map_injective {X Y} := by
+    intro u v eq
+    set e := (quotient _).objObjPreimageIso X
+    set f := (quotient _).objObjPreimageIso Y
+    set u' := (quotient _).preimage (e.hom ≫ u ≫ f.inv)
+    set v' := (quotient _).preimage (e.hom ≫ v ≫ f.inv)
+    have h : homotopic u' v' := by
+      rw [quotientOp_map_eq_iff]
+      have g : quotient _ ⋙ duality_functor C ≅ quotientOp C :=
+        (Quotient.lift.isLift homotopic (quotientOp C)
+        (fun _ _ _ _ ↦ (quotientOp_map_eq_iff _ _).mp))
+      rw [← cancel_epi (g.hom.app _), ← NatTrans.naturality, Functor.comp_map, map_preimage,
+        map_comp, map_comp, eq, ← map_comp, ← map_comp, ← NatTrans.naturality, Functor.comp_map,
+        map_preimage]
+    have := (quotient_map_eq_iff _ _).mpr h
+    rw [map_preimage, map_preimage] at this
+    simp only [Iso.cancel_iso_inv_right_assoc, Iso.cancel_iso_hom_left] at this
+    exact this
 
-variable (C) in
+instance : (duality_functor C).IsEquivalence where
+
+/-variable (C) in
 def duality : (Adel C)ᵒᵖ ≌ Adel (Cᵒᵖ) where
   functor := by
     refine Functor.leftOp (Quotient.lift _ ((duality_aux C).rightOp.functor ⋙
@@ -213,6 +249,7 @@ def duality : (Adel C)ᵒᵖ ≌ Adel (Cᵒᵖ) where
 -/
 --    refine ?_ ≪≫ (Quotient.lift homotopic ((duality_aux C).rightOp.functor ⋙ (quotient Cᵒᵖ).op) sorry).mapIso ?_
   counitIso := sorry
+-/
 
 end Duality
 
@@ -220,7 +257,7 @@ section Cokernels
 
 variable [HasBinaryBiproducts C]
 
-section Candidate
+namespace CandidateCoker
 
 variable {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
 
@@ -266,7 +303,7 @@ instance : Epi ((quotient C).map (candπ u')) := by
     rw [← quotient_map_eq_iff]
     dsimp [v']
     rw [map_comp, Functor.map_zero, map_preimage, ← assoc, hv, zero_comp]
-  have : (quotient C).map v' = 0 := (quotient_map_eq_iff _ _).mpr (candepi u' v' hv'  )
+  have : (quotient C).map v' = 0 := (quotient_map_eq_iff _ _).mpr (candepi u' v' hv')
   dsimp [v'] at this
   rw [(quotient C).map_preimage] at this
   simp only [Preadditive.IsIso.comp_right_eq_zero] at this
@@ -294,7 +331,9 @@ lemma candfac {T : ComposableArrows C 2} (v : Y' ⟶ T) (hv : homotopic (u' ≫ 
     change biprod.inl ≫ biprod.desc (v.app two) (- hv.choose_spec.choose ≫ T.map' 1 2) = _
     simp [two]
 
-end Candidate
+end CandidateCoker
+
+open CandidateCoker
 
 noncomputable def cocone_aux {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
     Cocone (parallelPair u' 0 ⋙ quotient C) := by
@@ -382,6 +421,186 @@ noncomputable instance {X Y : Adel C} (u : X ⟶ Y) : HasColimit (parallelPair u
   infer_instance
 
 end Cokernels
+
+section Kernels
+/-
+The existence of kernels follows from that of cokernels by duality, but we prove it
+explicitly, since we will use the precise form of the kernel to prove that every
+epimorphism is normal.
+-/
+
+variable [HasBinaryBiproducts C]
+
+namespace CandidateKer
+
+variable {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
+
+noncomputable abbrev candker : ComposableArrows C 2 :=
+  ComposableArrows.mk₂ (biprod.map (X'.map' 0 1) (𝟙 (Y'.obj zero)))
+  (biprod.map (X'.map' 1 2) (Y'.map' 0 1) + biprod.fst ≫ u'.app one ≫ biprod.inr)
+
+noncomputable abbrev candι : candker u' ⟶ X' := by
+  refine ComposableArrows.homMk₂ biprod.fst biprod.fst biprod.fst ?_ ?_
+  · dsimp; simp
+  · change (biprod.map (X'.map' 1 2) (Y'.map' 0 1) + biprod.fst ≫ u'.app one ≫ biprod.inr) ≫ _ = _
+    dsimp; simp
+
+lemma candcondition : homotopic (candι u' ≫ u') 0 := by
+  use -biprod.snd, biprod.snd
+  change _ = _ + (biprod.map (X'.map' 1 2) (Y'.map' 0 1) + biprod.fst ≫ u'.app one ≫
+    biprod.inr) ≫ _ + _
+  dsimp
+  simp
+
+lemma candmono {T : ComposableArrows C 2} (v : T ⟶ candker u') (hv : homotopic (v ≫ candι u') 0) :
+    homotopic v 0 := by
+  obtain ⟨σ₁, σ₂, eq⟩ := hv
+  use σ₁ ≫ biprod.inl + v.app one ≫ biprod.snd ≫ biprod.inr, σ₂ ≫ biprod.inl
+  dsimp at eq
+  simp only [Fin.isValue, homOfLE_leOfHom, add_zero] at eq
+  rw [NatTrans.app_zero, add_zero]
+  dsimp
+  exact biprod.hom_ext _ _ (by simp [eq]) (by simp)
+
+instance : Mono ((quotient C).map (candι u')) := by
+  rw [Preadditive.mono_iff_cancel_zero]
+  intro T v hv
+  set e := (quotient C).objObjPreimageIso T
+  set v' := (quotient C).preimage (e.hom ≫ v)
+  have hv' : homotopic (v' ≫ candι u') 0 := by
+    rw [← quotient_map_eq_iff]
+    dsimp [v']
+    rw [map_comp, Functor.map_zero, map_preimage, assoc, hv, comp_zero]
+  have : (quotient C).map v' = 0 := (quotient_map_eq_iff _ _).mpr (candmono u' v' hv')
+  dsimp [v'] at this
+  rw [(quotient C).map_preimage] at this
+  simp only [Preadditive.IsIso.comp_left_eq_zero] at this
+  exact this
+
+noncomputable abbrev candlift {T : ComposableArrows C 2} (v : T ⟶ X') (hv : homotopic (v ≫ u') 0) :
+    T ⟶ candker u' := by
+  set σ₁ := hv.choose
+  set σ₂ := hv.choose_spec.choose
+  set eq : _ = σ₁ ≫ _ + _ ≫ σ₂ + _ := hv.choose_spec.choose_spec
+  dsimp at eq
+  simp only [Fin.isValue, homOfLE_leOfHom, add_zero] at eq
+  refine ComposableArrows.homMk₂ (biprod.lift (v.app zero) (-T.map' 0 1 ≫ σ₁))
+    (biprod.lift (v.app one) (-σ₁)) (biprod.lift (v.app two) σ₂) ?_ ?_
+  · refine biprod.hom_ext _ _ (by dsimp; simp) (by dsimp; simp)
+  · change _ = _ ≫ (biprod.map (X'.map' 1 2) (Y'.map' 0 1) + biprod.fst ≫ u'.app one ≫ biprod.inr)
+    refine biprod.hom_ext _ _ ?_ ?_
+    · dsimp
+      simp [two]
+    · dsimp
+      simp [eq]
+
+lemma candfac {T : ComposableArrows C 2} (v : T ⟶ X') (hv : homotopic (v ≫ u') 0) :
+    candlift u' v hv ≫ candι u' = v := by
+  refine ComposableArrows.hom_ext₂ ?_ ?_ ?_
+  · dsimp [candlift]; simp
+  · dsimp [candlift]; simp
+  · dsimp
+    change biprod.lift (v.app two) hv.choose_spec.choose ≫ biprod.fst = _
+    simp [two]
+
+end CandidateKer
+
+open CandidateKer
+
+noncomputable def cone_aux {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
+    Cone (parallelPair u' 0 ⋙ quotient C) := by
+  refine (Cones.postcompose (diagramIsoParallelPair (parallelPair u' 0 ⋙ quotient C)).inv).obj
+    (Fork.ofι ((quotient C).map (candι u')) ?_)
+  suffices eq : (quotient C).map (candι u' ≫ u') = (quotient C).map 0 by
+    dsimp at eq ⊢
+    simp only [Fin.isValue, homOfLE_leOfHom, map_comp, Functor.map_zero, comp_zero] at eq ⊢
+    exact eq
+  exact (quotient_map_eq_iff _ _).mpr (candcondition u')
+
+noncomputable abbrev ι' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
+    (c : Cone (parallelPair u' 0 ⋙ quotient C)) : (quotient C).objPreimage c.pt ⟶ X' :=
+  (quotient C).preimage (((quotient C).objObjPreimageIso c.pt).hom ≫
+  c.π.app WalkingParallelPair.zero)
+
+omit [HasBinaryBiproducts C] in
+lemma conditionk' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
+    (c : Cone (parallelPair u' 0 ⋙ quotient C)) : homotopic (ι' u' c ≫ u') 0 := by
+  rw [← quotient_map_eq_iff]
+  dsimp [ι']
+  rw [map_comp,Functor.map_preimage, ← cancel_epi ((quotient C).objObjPreimageIso c.pt).inv]
+  simp only [Nat.reduceAdd, assoc, Iso.inv_hom_id_assoc, Functor.map_zero, comp_zero]
+  have := c.w WalkingParallelPairHom.left
+  dsimp at this
+  rw [this]
+  have := c.w WalkingParallelPairHom.right
+  dsimp at this
+  rw [← this]
+  simp
+
+noncomputable def cone_isLimit {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
+    IsLimit (cone_aux u') where
+  lift c := ((quotient C).objObjPreimageIso c.pt).inv ≫
+    (quotient C).map (candlift u' (ι' u' c) (conditionk' u' c))
+  fac c j := by
+    match j with
+    | WalkingParallelPair.zero =>
+      have := candfac u' (ι' u' c) (conditionk' u' c)
+      dsimp [cone_aux]
+      simp only [Fin.isValue, homOfLE_leOfHom, comp_id, assoc]
+      rw [← (quotient C).map_comp, this]
+      dsimp [ι']
+      rw [(quotient C).map_preimage]
+      simp
+    | WalkingParallelPair.one =>
+      have eq := c.w WalkingParallelPairHom.right
+      have eq' := (cone_aux u').w WalkingParallelPairHom.left
+      dsimp at eq eq'
+      rw [← eq, ← eq']
+      dsimp [cone_aux]
+      simp only [Fin.isValue, homOfLE_leOfHom, comp_id, assoc, Functor.map_zero, comp_zero,
+        Preadditive.IsIso.comp_left_eq_zero]
+      rw [← map_comp, (quotient_map_eq_iff _ _).mpr (candcondition u')]
+      simp
+  uniq c m hm := by
+    rw [← cancel_mono ((quotient C).map (candι u'))]
+    have := hm WalkingParallelPair.zero
+    dsimp [cone_aux] at this
+    simp only [Fin.isValue, homOfLE_leOfHom, comp_id] at this
+    rw [this, assoc, ← (quotient C).map_comp, candfac u' (ι' u' c) (conditionk' u' c)]
+    dsimp [ι']
+    rw [(quotient C).map_preimage]
+    simp
+
+instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
+    HasLimit (parallelPair u' 0 ⋙ quotient C) :=
+  HasLimit.mk {cone := cone_aux u', isLimit := cone_isLimit u'}
+
+open WalkingParallelPair WalkingParallelPairHom in
+noncomputable instance {X Y : Adel C} (u : X ⟶ Y) : HasLimit (parallelPair u 0) := by
+  set X' := (quotient C).objPreimage X
+  set Y' := (quotient C).objPreimage Y
+  set u' := (quotient C).preimage (((quotient C).objObjPreimageIso X).hom ≫ u ≫
+    ((quotient C).objObjPreimageIso Y).inv)
+  set g : WalkingParallelPair ⥤ ComposableArrows C 2 := parallelPair u' 0
+  set ι : g ⋙ quotient C ≅ parallelPair u 0 := by
+    refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
+    · match j with
+      | .zero => exact (quotient C).objObjPreimageIso X
+      | .one => exact (quotient C).objObjPreimageIso Y
+    · match u with
+      | .id _ => dsimp; simp
+      | .left => dsimp [g]; rw [(quotient C).map_preimage]; simp
+      | .right => dsimp [g]; simp
+  rw [← hasLimit_iff_of_iso ι]
+  infer_instance
+
+end Kernels
+
+section NormalEpi
+
+
+
+end NormalEpi
 
 end Adel
 
