@@ -97,6 +97,28 @@ instance : Preadditive (Adel C) := Quotient.preadditive _ (by
 
 instance : (quotient C).Additive where
 
+lemma quotient_map_epi_iff {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
+    Epi ((quotient C).map u') ↔ ∀ {T : ComposableArrows C 2} (v : Y' ⟶ T),
+    homotopic (u' ≫ v) 0 → homotopic v 0 := by
+  rw [Preadditive.epi_iff_cancel_zero]
+  refine ⟨fun h T v hv ↦ ?_, fun h T v hv ↦ ?_⟩
+  · rw [← quotient_map_eq_iff]
+    convert h ((quotient C).obj T) ((quotient C).map v)
+    simp only [Functor.map_zero, Classical.imp_iff_left_iff]
+    rw [← (quotient C).map_comp, ← (quotient C).map_zero, quotient_map_eq_iff]
+    exact Or.inl hv
+  · set e := (quotient C).objObjPreimageIso T
+    set v' := (quotient C).preimage (v ≫ e.inv)
+    have hv' : homotopic (u' ≫ v') 0 := by
+      rw [← quotient_map_eq_iff]
+      dsimp [v']
+      rw [map_comp, Functor.map_zero, map_preimage, ← assoc, hv, zero_comp]
+    have : (quotient C).map v' = 0 := (quotient_map_eq_iff _ _).mpr (h v' hv')
+    dsimp [v'] at this
+    rw [(quotient C).map_preimage] at this
+    simp only [Preadditive.IsIso.comp_right_eq_zero] at this
+    exact this
+
 section ZeroObject
 
 instance [HasZeroObject C] : HasZeroObject (Adel C) where
@@ -295,19 +317,8 @@ lemma candepi {T : ComposableArrows C 2} (v : candcoker u' ⟶ T) (hv : homotopi
   exact biprod.hom_ext' _ _ (by simp [eq]) (by simp)
 
 instance : Epi ((quotient C).map (candπ u')) := by
-  rw [Preadditive.epi_iff_cancel_zero]
-  intro T v hv
-  set e := (quotient C).objObjPreimageIso T
-  set v' := (quotient C).preimage (v ≫ e.inv)
-  have hv' : homotopic (candπ u' ≫ v') 0 := by
-    rw [← quotient_map_eq_iff]
-    dsimp [v']
-    rw [map_comp, Functor.map_zero, map_preimage, ← assoc, hv, zero_comp]
-  have : (quotient C).map v' = 0 := (quotient_map_eq_iff _ _).mpr (candepi u' v' hv')
-  dsimp [v'] at this
-  rw [(quotient C).map_preimage] at this
-  simp only [Preadditive.IsIso.comp_right_eq_zero] at this
-  exact this
+  rw [quotient_map_epi_iff]
+  exact candepi u'
 
 noncomputable abbrev canddesc {T : ComposableArrows C 2} (v : Y' ⟶ T) (hv : homotopic (u' ≫ v) 0) :
     candcoker u' ⟶ T := by
@@ -614,8 +625,82 @@ noncomputable def isoCocone {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
     | .left => dsimp; simp
     | .right => dsimp; simp
 
-def connecting {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
-    Y' ⟶ candcoker (candι u') := sorry
+noncomputable def connecting {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
+    [Epi ((quotient C).map u')] : Y' ⟶ candcoker (candι u') := by
+  have : Epi ((quotient C).map u') := inferInstance
+  rw [quotient_map_epi_iff u'] at this
+  set h := this (candπ u') (candcondition u')
+  set σ₁ := h.choose
+  set σ₂ := h.choose_spec.choose
+  set eq := h.choose_spec.choose_spec
+  have eq₁ : Y'.map' 1 2 ≫ σ₂ ≫ biprod.fst + σ₁ ≫ biprod.fst ≫ Y'.map' 0 1 +
+    σ₁ ≫ biprod.snd ≫ u'.app one = 𝟙 _ := sorry
+  have eq₂ : Y'.map' 1 2 ≫ σ₂ ≫ biprod.snd + σ₁ ≫ biprod.snd ≫ X'.map' 1 2 = 0 := sorry
+  dsimp at eq₁ eq₂
+  refine ComposableArrows.homMk₂ ?_ ?_ ?_ ?_ ?_
+  · exact biprod.lift 0 (biprod.lift (Y'.map' 0 1 ≫ σ₁ ≫ biprod.snd)
+      (Y'.map' 0 1 ≫ σ₁ ≫ biprod.fst - 𝟙 _))
+  · exact biprod.lift (σ₁ ≫ biprod.snd) (biprod.lift (- Y'.map' 1 2 ≫ σ₂ ≫ biprod.snd)
+      (- Y'.map' 1 2 ≫ σ₂ ≫ biprod.fst))
+  · exact biprod.lift (- σ₂ ≫ biprod.snd) (biprod.lift (- σ₂ ≫ biprod.snd) (- σ₂ ≫ biprod.fst))
+  · refine biprod.hom_ext _ _ ?_ (biprod.hom_ext _ _ ?_ ?_)
+    · simp only [assoc, biprod.lift_fst, Preadditive.comp_add, biprod.lift_snd_assoc,
+        biprod.lift_fst_assoc, Preadditive.add_comp]
+      change _ = _ ≫ ((biprod.map _ _ + biprod.snd ≫ (candι u').app one ≫ biprod.inl) ≫ biprod.fst)
+      simp
+    · simp only [assoc, biprod.lift_snd, biprod.lift_fst, Preadditive.comp_neg,
+        Preadditive.comp_add, biprod.lift_snd_assoc, biprod.lift_fst_assoc,
+        Preadditive.add_comp, biprod.map_snd]
+      change _ = _ ≫ ((biprod.map _ _ + biprod.snd ≫ (candι u').app one ≫ biprod.inl) ≫ _)
+      simp only [Preadditive.add_comp, assoc, Preadditive.comp_add, biprod.lift_snd_assoc,
+        biprod.lift_fst_assoc]
+      change _ = _ ≫ (biprod.map _ (biprod.map (X'.map' 1 2) (Y'.map' 0 1) + biprod.fst ≫
+        u'.app one ≫ biprod.inr) ≫ _) + _
+      dsimp
+      simp only [Fin.isValue, homOfLE_leOfHom, biprod.lift_fst_assoc, assoc]
+      conv_rhs => congr; congr; rfl
+                  rw [← assoc, biprod.map_snd, Preadditive.comp_add, Preadditive.add_comp]
+                  congr; rw [assoc, biprod.map_fst]; rfl
+                  rw [assoc, assoc, assoc, biprod.inr_fst, comp_zero, comp_zero, comp_zero]; rfl
+                  erw [biprod.inl_snd_assoc]
+                  rw [zero_comp, comp_zero, comp_zero, comp_zero]
+      simp only [Fin.isValue, homOfLE_leOfHom, add_zero, biprod.lift_snd_assoc,
+        biprod.lift_fst_assoc, assoc]
+      rw [← add_eq_zero_iff_neg_eq, ← Preadditive.comp_add, eq₂, comp_zero]
+    · simp only [assoc, biprod.lift_snd, Preadditive.comp_neg, Preadditive.comp_add,
+        biprod.lift_snd_assoc, biprod.lift_fst_assoc, Preadditive.add_comp, biprod.map_snd]
+      change _ = _ ≫ (biprod.map _ _ + biprod.snd ≫ (candι u').app one ≫ biprod.inl) ≫ _
+      simp only [Preadditive.add_comp, assoc, Preadditive.comp_add, biprod.lift_snd_assoc,
+        biprod.lift_fst_assoc]
+      change _ = _ ≫ biprod.map _ (biprod.map (X'.map' 1 2) (Y'.map' 0 1) + biprod.fst ≫
+        u'.app one ≫ biprod.inr) ≫ _ + _
+      dsimp
+      simp only [Fin.isValue, homOfLE_leOfHom, biprod.lift_fst_assoc, assoc]
+      conv_rhs => congr; congr; rfl
+                  rw [← assoc, biprod.map_snd, assoc, Preadditive.add_comp, biprod.map_snd]; rfl
+                  congr; rfl; congr; rfl; congr; rfl; rw [← assoc, biprod.inl_snd, zero_comp]
+      simp only [Fin.isValue, homOfLE_leOfHom, assoc, BinaryBicone.inr_snd, comp_id,
+        Preadditive.comp_add, biprod.lift_snd_assoc, Preadditive.sub_comp, id_comp,
+        biprod.lift_fst_assoc, comp_zero, add_zero]
+      rw [← add_eq_zero_iff_neg_eq, add_comm_sub, ← add_sub_assoc, ← add_sub_assoc]
+      apply sub_eq_zero_of_eq
+      conv_rhs => rw [← comp_id (Y'.map _), ← eq₁]
+      simp only [Fin.isValue, homOfLE_leOfHom, Nat.reduceAdd, Preadditive.comp_add]
+      abel
+  · refine biprod.hom_ext _ _ ?_ (biprod.hom_ext _ _ ?_ ?_)
+    · simp only [assoc, biprod.lift_fst, Preadditive.comp_neg]
+      change _ = _ ≫ biprod.map _ (𝟙 _) ≫ _
+      dsimp
+      simp only [Fin.isValue, homOfLE_leOfHom, biprod.map_fst, biprod.lift_fst_assoc, assoc]
+      rw [← add_eq_zero_iff_neg_eq, eq₂]
+    · simp only [assoc, biprod.lift_snd, biprod.lift_fst, Preadditive.comp_neg]
+      change _ = _ ≫ biprod.map _ (𝟙 _) ≫ _
+      dsimp
+      simp
+    · simp only [assoc, biprod.lift_snd, Preadditive.comp_neg]
+      change _ = _ ≫ biprod.map _ (𝟙 _) ≫ _
+      dsimp
+      simp
 
 lemma comp_zero {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
     (quotient C).map (candι u') ≫ (quotient C).map u' = 0 := by
