@@ -598,7 +598,147 @@ end Kernels
 
 section NormalEpi
 
+open CandidateKer CandidateCoker
 
+variable [HasBinaryBiproducts C]
+
+open WalkingParallelPair WalkingParallelPairHom in
+noncomputable def isoCocone {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
+    parallelPair (candι u') 0 ⋙ quotient C ≅ parallelPair ((quotient C).map (candι u')) 0 := by
+  refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
+  · match j with
+    | .zero => exact Iso.refl _
+    | .one => exact Iso.refl _
+  · match u with
+    | .id _ => dsimp; simp
+    | .left => dsimp; simp
+    | .right => dsimp; simp
+
+def connecting {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
+    Y' ⟶ candcoker (candι u') := sorry
+
+lemma comp_zero {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
+    (quotient C).map (candι u') ≫ (quotient C).map u' = 0 := by
+  rw [← map_comp, ← (quotient C).map_zero, quotient_map_eq_iff]
+  exact candcondition u'
+
+lemma compat {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
+    homotopic (u' ≫ connecting u') (candπ (candι u')) := sorry
+
+lemma compat₁ {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
+    (quotient C).map (connecting u') ≫ (cocone_isColimit (candι u')).desc
+    ((Cocones.precompose (isoCocone u').hom).obj ((CokernelCofork.ofπ ((quotient C).map u')
+    (comp_zero u')))) = 𝟙 _ := by
+  rw [← cancel_epi ((quotient C).map u')]
+  have eq : (quotient C).map u' ≫ (quotient C).map (connecting u') =
+      (quotient C).map (candπ (candι u')) := by
+    rw [← (quotient C).map_comp, quotient_map_eq_iff]
+    exact compat u'
+  slice_lhs 1 2 => rw [eq]
+  have := (cocone_isColimit (candι u')).fac ((Cocones.precompose (isoCocone u').hom).obj
+    (CokernelCofork.ofπ ((quotient C).map u') (comp_zero u'))) WalkingParallelPair.one
+  dsimp [cocone_aux] at this
+  change _ = 𝟙 _ ≫ _ at this
+  simp only [id_comp] at this
+  conv_rhs => congr; rw [← this]
+  dsimp
+  simp
+
+lemma compat₂ {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
+    (cocone_isColimit (candι u')).desc ((Cocones.precompose (isoCocone u').hom).obj
+    ((CokernelCofork.ofπ ((quotient C).map u') (comp_zero u')))) ≫
+    (quotient C).map (connecting u') = 𝟙 _ := by
+  have : IsColimit ((Cocones.precompose (isoCocone u').inv).obj (cocone_aux (candι u'))) :=
+    (IsColimit.precomposeInvEquiv _ _).invFun (cocone_isColimit (candι u'))
+  have : Epi ((quotient C).map (candπ (candι u'))) := by
+    have : Epi (𝟙 _ ≫ 𝟙 _ ≫ (quotient C).map (candπ (candι u'))) := epi_of_isColimit_cofork this
+    have : Epi (𝟙 _ ≫ (quotient C).map (candπ (candι u'))) := epi_of_epi (𝟙 _) _
+    exact epi_of_epi (𝟙 _) _
+  rw [← cancel_epi ((quotient C).map (candπ (candι u')))]
+  have := (cocone_isColimit (candι u')).fac ((Cocones.precompose (isoCocone u').hom).obj
+    ((CokernelCofork.ofπ ((quotient C).map u') (comp_zero u')))) WalkingParallelPair.one
+  change (𝟙 _ ≫ (quotient C).map (candπ (candι u'))) ≫ _ = _ at this
+  rw [id_comp] at this
+  rw [← assoc, this]
+  change (𝟙 _ ≫ (quotient C).map _) ≫ _ = _
+  rw [id_comp]
+  conv_rhs => erw [comp_id]
+  rw [← (quotient C).map_comp, quotient_map_eq_iff]
+  exact compat u'
+
+open WalkingParallelPair WalkingParallelPairHom in
+noncomputable instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
+    NormalEpi ((quotient C).map u') where
+  W := (quotient C).obj (candker u')
+  g := (quotient C).map (candι u')
+  w := comp_zero u'
+  isColimit := by
+    set c : Cofork ((quotient C).map (candι u')) 0 := (CokernelCofork.ofπ ((quotient C).map u')
+      (comp_zero u'))
+    set ι : parallelPair (candι u') 0 ⋙ quotient C ≅
+      parallelPair ((quotient C).map (candι u')) 0 := isoCocone u'
+    set e : (Cocones.precompose ι.inv).obj (cocone_aux (candι u')) ≅ c := by
+      refine Cocones.ext ?_ (fun j ↦ ?_)
+      · exact {hom := (cocone_isColimit (candι u')).desc ((Cocones.precompose ι.hom).obj c),
+               inv := (quotient C).map (connecting u'),
+               hom_inv_id := compat₂ u',
+               inv_hom_id := compat₁ u'}
+      · match j with
+        | WalkingParallelPair.zero =>
+          dsimp
+          have eq := c.w WalkingParallelPairHom.right
+          have eq' := (cocone_aux (candι u')).w WalkingParallelPairHom.right
+          rw [← eq, ← eq']
+          simp
+        | WalkingParallelPair.one =>
+          dsimp
+          change (𝟙 _ ≫ (𝟙 _ ≫ (quotient C).map (candπ (candι u')))) ≫ _ = (quotient C).map u'
+          dsimp
+          simp only [Fin.isValue, homOfLE_leOfHom, Category.id_comp]
+          have := (cocone_isColimit (candι u')).fac ((Cocones.precompose ι.hom).obj c)
+            WalkingParallelPair.one
+          change (𝟙 _ ≫ (quotient C).map (candπ (candι u'))) ≫ _ = 𝟙 _ ≫ _ at this
+          dsimp at this
+          simp only [Fin.isValue, homOfLE_leOfHom, Category.id_comp] at this
+          exact this
+    exact IsColimit.equivOfNatIsoOfIso ι _ _ e (cocone_isColimit (candι u'))
+
+open WalkingParallelPair WalkingParallelPairHom in
+noncomputable instance {X Y : Adel C} (u : X ⟶ Y) [Epi u] : NormalEpi u := by
+  set e := (quotient _).objObjPreimageIso X
+  set f := (quotient _).objObjPreimageIso Y
+  set v := (quotient C).preimage (e.hom ≫ u ≫ f.inv)
+  have : Epi ((quotient C).map v) := by
+    rw [map_preimage]
+    infer_instance
+  have eq : u = e.inv ≫ (quotient C).map v ≫ f.hom := by
+    rw [map_preimage]; simp
+  rw [eq]
+  have h : NormalEpi ((quotient C).map v) := inferInstance
+  have zero : (h.g ≫ e.hom) ≫ e.inv ≫ (quotient C).map v ≫ f.hom = 0 := by
+    simp only [Category.assoc, Iso.hom_inv_id_assoc]
+    rw [← Category.assoc, h.w, zero_comp]
+  refine {W := h.W, g := h.g ≫ e.hom, w := zero, isColimit := ?_}
+  set α : parallelPair h.g 0 ≅ parallelPair (h.g ≫ e.hom) 0 := by
+    refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
+    · match j with
+      | .zero => exact Iso.refl _
+      | .one => exact e
+    · match u with
+      | .id _ => dsimp; simp
+      | .left => dsimp; simp
+      | .right => dsimp; simp
+  set ι : (Cocones.precompose α.inv).obj (CokernelCofork.ofπ ((quotient C).map v) h.w) ≅
+      (CokernelCofork.ofπ (e.inv ≫ (quotient C).map v ≫ f.hom) zero) := by
+    refine Cocones.ext ?_ (fun j ↦ ?_)
+    · exact f
+    · match j with
+      | .zero => dsimp [α]; simp
+      | .one => dsimp [α]; simp
+  exact IsColimit.equivOfNatIsoOfIso α _ _ ι h.isColimit
+
+noncomputable instance : IsNormalEpiCategory (Adel C) where
+  normalEpiOfEpi _ _ := Nonempty.intro inferInstance
 
 end NormalEpi
 
