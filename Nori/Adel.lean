@@ -180,7 +180,29 @@ instance : (quotientOp C).EssSurj := by
   infer_instance
 
 lemma quotientOp_map_eq_iff {X Y : ComposableArrows (Cᵒᵖ) 2} (u v : X ⟶ Y) :
-    homotopic u v ↔ (quotientOp C).map u = (quotientOp C).map v := sorry
+    homotopic u v ↔ (quotientOp C).map u = (quotientOp C).map v := by
+  dsimp [quotientOp]
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · congr 1
+    rw [quotient_map_eq_iff]
+    obtain ⟨σ₁, σ₂, eq⟩ := h
+    use σ₂.unop, σ₁.unop
+    apply_fun Quiver.Hom.unop at eq
+    dsimp [duality_aux] at eq ⊢
+    rw [eq]
+    simp only [Fin.isValue, homOfLE_leOfHom, add_left_inj]
+    rw [add_comm]
+    rfl
+  · replace h := Quiver.Hom.op_inj h
+    rw [quotient_map_eq_iff] at h
+    obtain ⟨σ₁, σ₂, eq⟩ := h
+    use σ₂.op, σ₁.op
+    apply Quiver.Hom.unop_inj
+    dsimp [duality_aux] at eq ⊢
+    rw [eq]
+    simp only [Fin.isValue, homOfLE_leOfHom, add_left_inj]
+    conv_lhs => rw [add_comm]
+    rfl
 
 variable (C) in
 def duality_functor : Adel (Cᵒᵖ) ⥤ (Adel C)ᵒᵖ :=
