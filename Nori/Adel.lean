@@ -632,10 +632,30 @@ noncomputable def connecting {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
   set h := this (candπ u') (candcondition u')
   set σ₁ := h.choose
   set σ₂ := h.choose_spec.choose
-  set eq := h.choose_spec.choose_spec
+  set eq : (candπ u').app one = σ₁ ≫ (candcoker u').map' 0 1 + Y'.map' 1 2 ≫ σ₂ +
+    NatTrans.app _ one := h.choose_spec.choose_spec
   have eq₁ : Y'.map' 1 2 ≫ σ₂ ≫ biprod.fst + σ₁ ≫ biprod.fst ≫ Y'.map' 0 1 +
-    σ₁ ≫ biprod.snd ≫ u'.app one = 𝟙 _ := sorry
-  have eq₂ : Y'.map' 1 2 ≫ σ₂ ≫ biprod.snd + σ₁ ≫ biprod.snd ≫ X'.map' 1 2 = 0 := sorry
+      σ₁ ≫ biprod.snd ≫ u'.app one = 𝟙 _ := by
+    apply_fun (fun x ↦ x ≫ biprod.fst) at eq
+    simp only [BinaryBicone.inl_fst, Preadditive.comp_add, zero_app, add_zero,
+      Preadditive.add_comp, assoc] at eq
+    change _ = _ ≫ (biprod.map _ _ + biprod.snd ≫ u'.app one ≫ biprod.inl) ≫ _ + _ at eq
+    dsimp [candπ] at eq
+    simp only [BinaryBicone.inl_fst, Preadditive.comp_add, Preadditive.add_comp, assoc] at eq
+    dsimp
+    rw [eq]
+    erw [biprod.map_fst, biprod.inl_fst]
+    simp only [Fin.isValue, homOfLE_leOfHom, Preadditive.comp_add, add_zero, comp_id]
+    conv_lhs => rw [add_comm, ← add_assoc, add_comm]
+    conv_rhs => rw [add_assoc]
+  have eq₂ : Y'.map' 1 2 ≫ σ₂ ≫ biprod.snd + σ₁ ≫ biprod.snd ≫ X'.map' 1 2 = 0 := by
+    apply_fun (fun x ↦ x ≫ biprod.snd) at eq
+    dsimp at eq ⊢
+    simp only [Fin.isValue, BinaryBicone.inl_snd, homOfLE_leOfHom, Preadditive.comp_add, add_zero,
+      Preadditive.add_comp, assoc, biprod.map_snd] at eq
+    rw [biprod.inl_snd, comp_zero, comp_zero, comp_zero, add_zero] at eq
+    rw [eq]
+    abel
   dsimp at eq₁ eq₂
   refine ComposableArrows.homMk₂ ?_ ?_ ?_ ?_ ?_
   · exact biprod.lift 0 (biprod.lift (Y'.map' 0 1 ≫ σ₁ ≫ biprod.snd)
