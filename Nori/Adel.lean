@@ -768,7 +768,7 @@ noncomputable def connecting {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
       dsimp
       simp
 
-lemma comp_zero {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
+lemma cand_comp {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
     (quotient C).map (candι u') ≫ (quotient C).map u' = 0 := by
   rw [← map_comp, ← (quotient C).map_zero, quotient_map_eq_iff]
   exact candcondition u'
@@ -820,7 +820,7 @@ lemma compat {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).
 lemma compat₁ {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
     (quotient C).map (connecting u') ≫ (cocone_isColimit (candι u')).desc
     ((Cocones.precompose (isoCocone u').hom).obj ((CokernelCofork.ofπ ((quotient C).map u')
-    (comp_zero u')))) = 𝟙 _ := by
+    (cand_comp u')))) = 𝟙 _ := by
   rw [← cancel_epi ((quotient C).map u')]
   have eq : (quotient C).map u' ≫ (quotient C).map (connecting u') =
       (quotient C).map (candπ (candι u')) := by
@@ -828,7 +828,7 @@ lemma compat₁ {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient 
     exact compat u'
   slice_lhs 1 2 => rw [eq]
   have := (cocone_isColimit (candι u')).fac ((Cocones.precompose (isoCocone u').hom).obj
-    (CokernelCofork.ofπ ((quotient C).map u') (comp_zero u'))) WalkingParallelPair.one
+    (CokernelCofork.ofπ ((quotient C).map u') (cand_comp u'))) WalkingParallelPair.one
   dsimp [cocone_aux] at this
   change _ = 𝟙 _ ≫ _ at this
   simp only [id_comp] at this
@@ -838,7 +838,7 @@ lemma compat₁ {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient 
 
 lemma compat₂ {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
     (cocone_isColimit (candι u')).desc ((Cocones.precompose (isoCocone u').hom).obj
-    ((CokernelCofork.ofπ ((quotient C).map u') (comp_zero u')))) ≫
+    ((CokernelCofork.ofπ ((quotient C).map u') (cand_comp u')))) ≫
     (quotient C).map (connecting u') = 𝟙 _ := by
   have : IsColimit ((Cocones.precompose (isoCocone u').inv).obj (cocone_aux (candι u'))) :=
     (IsColimit.precomposeInvEquiv _ _).invFun (cocone_isColimit (candι u'))
@@ -848,7 +848,7 @@ lemma compat₂ {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient 
     exact epi_of_epi (𝟙 _) _
   rw [← cancel_epi ((quotient C).map (candπ (candι u')))]
   have := (cocone_isColimit (candι u')).fac ((Cocones.precompose (isoCocone u').hom).obj
-    ((CokernelCofork.ofπ ((quotient C).map u') (comp_zero u')))) WalkingParallelPair.one
+    ((CokernelCofork.ofπ ((quotient C).map u') (cand_comp u')))) WalkingParallelPair.one
   change (𝟙 _ ≫ (quotient C).map (candπ (candι u'))) ≫ _ = _ at this
   rw [id_comp] at this
   rw [← assoc, this]
@@ -863,10 +863,10 @@ noncomputable instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((qu
     NormalEpi ((quotient C).map u') where
   W := (quotient C).obj (candker u')
   g := (quotient C).map (candι u')
-  w := comp_zero u'
+  w := cand_comp u'
   isColimit := by
     set c : Cofork ((quotient C).map (candι u')) 0 := (CokernelCofork.ofπ ((quotient C).map u')
-      (comp_zero u'))
+      (cand_comp u'))
     set ι : parallelPair (candι u') 0 ⋙ quotient C ≅
       parallelPair ((quotient C).map (candι u')) 0 := isoCocone u'
     set e : (Cocones.precompose ι.inv).obj (cocone_aux (candι u')) ≅ c := by
