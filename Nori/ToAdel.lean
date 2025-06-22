@@ -170,7 +170,7 @@ noncomputable def contractNatTrans : contractLeft A ⟶ contractRight A where
     | 1 => dsimp; simp
     | 2 => dsimp; simp
 
-lemma contractNatTrans_mono (X : ComposableArrows A 2) :
+instance contractNatTrans_mono (X : ComposableArrows A 2) :
     Mono (HomologicalComplex.homologyMap ((contractNatTrans A).app X) 1) := by
   rw [Preadditive.mono_iff_cancel_zero]
   intro A₀ a₀ h₀
@@ -230,6 +230,55 @@ lemma contractNatTrans_mono (X : ComposableArrows A 2) :
   rw [← cancel_epi π, ← cancel_epi π', ← h₄]
   simp
 
+instance contractNatTrans_epi (X : ComposableArrows A 2) :
+    Epi (HomologicalComplex.homologyMap ((contractNatTrans A).app X) 1) := by
+  rw [epi_iff_surjective_up_to_refinements]
+  intro A₀ a₀
+  obtain ⟨A₁, π, _, a₁, h₁⟩ := (epi_iff_surjective_up_to_refinements
+    (((contractRight A).obj X).homologyπ 1)).mp inferInstance a₀
+  have zero : (a₁ ≫ ((contractRight A).obj X).iCycles 1 ≫ ((contractLeft A).obj X).d 1 2) ≫
+      ((contractNatTrans A).app X).f 2 = 0 := by
+    rw [assoc, assoc, ← ((contractNatTrans A).app X).comm]
+    change _ ≫ _ ≫ 𝟙 _ ≫ _ = 0
+    simp
+  set a₂ : A₁ ⟶ Abelian.image (X.map' 0 1 ≫ X.map' 1 2) :=
+    kernel.lift (cokernel.π _) (a₁ ≫ ((contractRight A).obj X).iCycles 1 ≫
+    ((contractLeft A).obj X).d 1 2) zero
+  have h₂ : a₂ ≫ Abelian.image.ι _ = a₁ ≫ ((contractRight A).obj X).iCycles 1 ≫
+      ((contractLeft A).obj X).d 1 2 := by simp [a₂]
+  obtain ⟨A₃, π', _, a₃, h₃⟩ := (epi_iff_surjective_up_to_refinements
+    (Abelian.factorThruImage (X.map' 0 1 ≫ X.map' 1 2))).mp inferInstance a₂
+  set a₁' := π' ≫ a₁ ≫ ((contractRight A).obj X).iCycles 1 - a₃ ≫ ((contractRight A).obj X).d 0 1
+  have zero' : a₁' ≫ ((contractLeft A).obj X).d 1 2 = 0 := by
+    simp only [Preadditive.sub_comp, assoc, a₁']
+    erw [CochainComplex.of_d, CochainComplex.of_d]
+    change _ - a₃ ≫ X.map' 0 1 ≫ X.map' 1 2 = 0
+    rw [← Abelian.image.fac (X.map' 0 1 ≫ X.map' 1 2), ← assoc a₃, ← h₃, assoc π', h₂]
+    dsimp [contractRight]
+    erw [CochainComplex.of_d]
+    simp
+  set a₂' : A₃ ⟶ ((contractLeft A).obj X).cycles 1 :=
+    ((contractLeft A).obj X).liftCycles a₁' 2 (by simp) zero'
+  have h₂' : a₂' ≫ ((contractLeft A).obj X).iCycles 1 = a₁' := by simp [a₂']
+  have eq : (a₂' ≫ ((contractLeft A).obj X).homologyπ 1) ≫
+      HomologicalComplex.homologyMap ((contractNatTrans A).app X) 1 = (π' ≫ π) ≫ a₀ := by
+    rw [assoc, HomologicalComplex.homologyπ_naturality]
+    have : a₂' ≫ HomologicalComplex.cyclesMap ((contractNatTrans A).app X) 1 =
+        π' ≫ a₁ - a₃ ≫ ((contractRight A).obj X).toCycles 0 1 := by
+      rw [← cancel_mono (((contractRight A).obj X).iCycles 1)]
+      simp only [assoc, HomologicalComplex.cyclesMap_i, Preadditive.sub_comp,
+        HomologicalComplex.toCycles_i]
+      rw [← assoc a₂', h₂']
+      simp only [Preadditive.sub_comp, assoc, a₁']
+      change _ ≫ _ ≫ _ ≫ 𝟙 _ - _ ≫ _ ≫ 𝟙 _ = _
+      rw [comp_id, comp_id]
+    rw [← assoc a₂', this, Preadditive.sub_comp, assoc π' a₁, ← h₁]
+    simp
+  exact ⟨A₃, π' ≫ π, inferInstance, a₂' ≫ ((contractLeft A).obj X).homologyπ 1, eq.symm⟩
+
+instance contractNatTrans_iso (X : ComposableArrows A 2) :
+    IsIso (HomologicalComplex.homologyMap ((contractNatTrans A).app X) 1) :=
+  isIso_of_mono_of_epi _
 
 end Contract
 
