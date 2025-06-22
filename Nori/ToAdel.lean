@@ -173,16 +173,23 @@ noncomputable def contractNatTrans : contractLeft A ⟶ contractRight A where
 lemma contractNatTrans_mono (X : ComposableArrows A 2) :
     Mono (HomologicalComplex.homologyMap ((contractNatTrans A).app X) 1) := by
   rw [Preadditive.mono_iff_cancel_zero]
-  intro T a ha
-  obtain ⟨A', π, _, a', ha'⟩ := (epi_iff_surjective_up_to_refinements
-    (((contractLeft A).obj X).homologyπ 1)).mp inferInstance a
+  intro A₀ a₀ h₀
+  obtain ⟨A₁, π, _, a₁, h₁⟩ := (epi_iff_surjective_up_to_refinements
+    (((contractLeft A).obj X).homologyπ 1)).mp inferInstance a₀
   have eq : ((contractLeft A).obj X).iCycles 1 ≫ ((contractRight A).obj X).pOpcycles 1 =
-    ((contractLeft A).obj X).homologyπ 1 ≫ HomologicalComplex.homologyMap
-    ((contractNatTrans A).app X) 1 ≫ ((contractRight A).obj X).homologyι 1 := sorry
-  have : (a' ≫ ((contractLeft A).obj X).iCycles 1) ≫
+      ((contractLeft A).obj X).homologyπ 1 ≫ HomologicalComplex.homologyMap
+      ((contractNatTrans A).app X) 1 ≫ ((contractRight A).obj X).homologyι 1 := by
+    have : ((contractRight A).obj X).pOpcycles 1 = ((contractLeft A).obj X).pOpcycles 1 ≫
+        HomologicalComplex.opcyclesMap ((contractNatTrans A).app X) 1 := by
+      rw [HomologicalComplex.p_opcyclesMap]
+      change _ = 𝟙 _ ≫ _
+      rw [id_comp]
+    rw [this, ← assoc, ← HomologicalComplex.homology_π_ι, assoc,
+      HomologicalComplex.homologyι_naturality]
+  have : (a₁ ≫ ((contractLeft A).obj X).iCycles 1) ≫
       ((contractRight A).obj X).pOpcycles 1 = 0 := by
-    rw [assoc, eq, ← assoc, ← ha', assoc, ← assoc a, ha, zero_comp, comp_zero]
-  have : (a' ≫ ((contractLeft A).obj X).iCycles 1) ≫ cokernel.π (X.map' 0 1) = 0 := by
+    rw [assoc, eq, ← assoc, ← h₁, assoc, ← assoc a₀, h₀, zero_comp, comp_zero]
+  have : (a₁ ≫ ((contractLeft A).obj X).iCycles 1) ≫ cokernel.π (X.map' 0 1) = 0 := by
     have eq : (((contractRight A).obj X).d 0 1) = X.map' 0 1 := by
       dsimp [contractRight]
       erw [CochainComplex.of_d]
@@ -195,24 +202,33 @@ lemma contractNatTrans_mono (X : ComposableArrows A 2) :
     erw [(((contractRight A).obj X).opcyclesIsCokernel 0 1
       (by simp)).comp_coconePointUniqueUpToIso_inv (cokernelIsCokernel _) WalkingParallelPair.one]
     simp [this]
-  set a'' : A' ⟶ Abelian.image (X.map' 0 1) :=
-    kernel.lift (cokernel.π (X.map' 0 1)) (a' ≫ ((contractLeft A).obj X).iCycles 1) this
-  have ha'' : a'' ≫ Abelian.image.ι (X.map' 0 1) = a' ≫ ((contractLeft A).obj X).iCycles 1 := by
-    simp [a'']
-  obtain ⟨A'', π', _, a''', ha'''⟩ := (epi_iff_surjective_up_to_refinements
-    (Abelian.factorThruImage (X.map' 0 1))).mp inferInstance a''
-  have zero : a''' ≫ X.map' 0 1 ≫ X.map' 1 2 = 0 := by
-    rw [← Abelian.image.fac (X.map' 0 1), ← assoc, ← assoc, ← ha''']
-    slice_lhs 2 3 => rw [ha'']
+  set a₂ : A₁ ⟶ Abelian.image (X.map' 0 1) :=
+    kernel.lift (cokernel.π (X.map' 0 1)) (a₁ ≫ ((contractLeft A).obj X).iCycles 1) this
+  have h₂ : a₂ ≫ Abelian.image.ι (X.map' 0 1) = a₁ ≫ ((contractLeft A).obj X).iCycles 1 := by
+    simp [a₂]
+  obtain ⟨A₃, π', _, a₃, h₃⟩ := (epi_iff_surjective_up_to_refinements
+    (Abelian.factorThruImage (X.map' 0 1))).mp inferInstance a₂
+  have zero : a₃ ≫ X.map' 0 1 ≫ X.map' 1 2 = 0 := by
+    rw [← Abelian.image.fac (X.map' 0 1), ← assoc, ← assoc, ← h₃]
+    slice_lhs 2 3 => rw [h₂]
     have : X.map' 1 2 = ((contractLeft A).obj X).d 1 2 := by
       dsimp [contractLeft]
       erw [CochainComplex.of_d]
       rfl
     rw [this]
     simp
-
-
-
+  set a₄ : A₃ ⟶ ((contractLeft A).obj X).X 0 := kernel.lift (X.map' 0 1 ≫ X.map' 1 2) a₃ zero
+  have h₄ : a₄ ≫ ((contractLeft A).obj X).toCycles 0 1 ≫ ((contractLeft A).obj X).homologyπ 1 =
+      π' ≫ π ≫ a₀ := by
+    rw [h₁, ← assoc, ← assoc]
+    congr 1
+    rw [← cancel_mono (((contractLeft A).obj X).iCycles 1), assoc π', ← h₂, ← assoc π', h₃,
+      assoc a₃, Abelian.image.fac, assoc a₄, HomologicalComplex.toCycles_i]
+    erw [CochainComplex.of_d _ _ (contractLeft_obj_sq X)]
+    change a₄ ≫ kernel.ι _ ≫ X.map' 0 1 = _
+    rw [kernel.lift_ι_assoc]
+  rw [← cancel_epi π, ← cancel_epi π', ← h₄]
+  simp
 
 
 end Contract
