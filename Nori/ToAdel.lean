@@ -149,26 +149,29 @@ end ContractRight
 
 section Contract
 
+noncomputable def contractLeftToRight {X Y : ComposableArrows A 2} (u : X ⟶ Y) :
+    (contractLeft A).obj X ⟶ (contractRight A).obj Y := by
+  refine CochainComplex.ofHom _ _ (contractLeft_obj_sq X) _ _ (contractRight_obj_sq Y)
+    (fun i ↦ ?_) (fun i ↦ ?_)
+  · match i with
+    | 0 => exact kernel.ι _ ≫ u.app 0
+    | 1 => exact u.app 1
+    | 2 => exact u.app 2 ≫ cokernel.π _
+  · match i with
+    | 0 => dsimp [contractRight_obj_d, contractLeft_obj_d]; simp
+    | 1 => dsimp [contractRight_obj_d, contractLeft_obj_d]; simp
+    | 2 => dsimp [contractRight_obj_d, contractLeft_obj_d]; simp
+
 variable (A)
 
 noncomputable def contractNatTrans : contractLeft A ⟶ contractRight A where
-  app X := by
-    refine CochainComplex.ofHom _ _ (contractLeft_obj_sq X) _ _ (contractRight_obj_sq X)
-      (fun i ↦ ?_) (fun i ↦ ?_)
-    · match i with
-      | 0 => exact kernel.ι _
-      | 1 => exact 𝟙 _
-      | 2 => exact cokernel.π _
-    · match i with
-      | 0 => dsimp [contractRight_obj_d, contractLeft_obj_d]; simp
-      | 1 => dsimp [contractRight_obj_d, contractLeft_obj_d]; simp
-      | 2 => dsimp [contractRight_obj_d, contractLeft_obj_d]; simp
+  app X := contractLeftToRight (𝟙 X)
   naturality X Y f := by
     ext i
     match i with
-    | 0 => dsimp; simp
-    | 1 => dsimp; simp
-    | 2 => dsimp; simp
+    | 0 => dsimp [contractLeftToRight]; simp
+    | 1 => dsimp [contractLeftToRight]; erw [comp_id, id_comp]
+    | 2 => dsimp [contractLeftToRight]; erw [id_comp, id_comp]; simp
 
 instance contractNatTrans_mono (X : ComposableArrows A 2) :
     Mono (HomologicalComplex.homologyMap ((contractNatTrans A).app X) 1) := by
@@ -243,7 +246,8 @@ instance contractNatTrans_epi (X : ComposableArrows A 2) :
     simp
   set a₂ : A₁ ⟶ Abelian.image (X.map' 0 1 ≫ X.map' 1 2) :=
     kernel.lift (cokernel.π _) (a₁ ≫ ((contractRight A).obj X).iCycles 1 ≫
-    ((contractLeft A).obj X).d 1 2) zero
+    ((contractLeft A).obj X).d 1 2)
+    (by dsimp [contractNatTrans, contractLeftToRight] at zero; erw [id_comp] at zero; exact zero)
   have h₂ : a₂ ≫ Abelian.image.ι _ = a₁ ≫ ((contractRight A).obj X).iCycles 1 ≫
       ((contractLeft A).obj X).d 1 2 := by simp [a₂]
   obtain ⟨A₃, π', _, a₃, h₃⟩ := (epi_iff_surjective_up_to_refinements
@@ -280,28 +284,54 @@ instance contractNatTrans_iso (X : ComposableArrows A 2) :
     IsIso (HomologicalComplex.homologyMap ((contractNatTrans A).app X) 1) :=
   isIso_of_mono_of_epi _
 
+lemma comp_contractNatTrans {X Y : ComposableArrows A 2} (u : X ⟶ Y) :
+    (contractLeft A).map u ≫ (contractNatTrans A).app Y = contractLeftToRight u := by
+  ext i
+  match i with
+  | 0 => dsimp [contractNatTrans, contractLeftToRight]; simp
+  | 1 => dsimp [contractNatTrans, contractLeftToRight]; erw [comp_id]
+  | 2 => dsimp [contractNatTrans, contractLeftToRight]; erw [id_comp]
+
+lemma contractNatTrans_comp {X Y : ComposableArrows A 2} (u : X ⟶ Y) :
+    (contractNatTrans A).app X ≫ (contractRight A).map u = contractLeftToRight u := by
+  ext i
+  match i with
+  | 0 => dsimp [contractNatTrans, contractLeftToRight]; simp
+  | 1 => dsimp [contractNatTrans, contractLeftToRight]; erw [id_comp]
+  | 2 => dsimp [contractNatTrans, contractLeftToRight]; erw [id_comp]; simp
+
 end Contract
 
+lemma homologyLeft_map_eq_of_homotopic {X Y : ComposableArrows A 2} (u v : X ⟶ Y)
+    (h : homotopic u v) : (homologyLeft A).map u = (homologyLeft A).map v := by
+  rw [← cancel_mono (HomologicalComplex.homologyMap ((contractNatTrans A).app Y) 1)]
+  simp only [Functor.comp_map, homologyLeft, HomologicalComplex.homologyFunctor_map]
+  rw [← HomologicalComplex.homologyMap_comp, comp_contractNatTrans,
+    ← HomologicalComplex.homologyMap_comp, comp_contractNatTrans]
+  obtain ⟨σ₁, σ₂, eq⟩ := h
+  refine ShortComplex.Homotopy.homologyMap_congr ?_
+  simp [HomologicalComplex.shortComplexFunctor, HomologicalComplex.shortComplexFunctor']
+  simp [contractLeftToRight]
+  refine {h₀ := ?_, h₀_f := ?_, h₁ := ?_, h₂ := ?_, h₃ := 0,
+           g_h₃ := by simp, comm₁ := ?_, comm₂ := ?_, comm₃ := ?_}
+  · erw [HomologicalComplex.shortComplexFunctor_obj_X₁]
+    simp
+    exact kernel.ι _ ≫ (u.app zero + X.map' 0 1 ≫ σ₁ - v.app zero)
+  · simp
+    change (kernel.ι _ ≫ (u.app zero + X.map' 0 1 ≫ σ₁ - v.app zero)) ≫ _ = 0
+  · erw [HomologicalComplex.shortComplexFunctor_obj_X₂]
+    erw [HomologicalComplex.shortComplexFunctor_obj_X₁]
+    simp only [CochainComplex.of_x, CochainComplex.prev, sub_self]
+    exact σ₁
+  · erw [HomologicalComplex.shortComplexFunctor_obj_X₂]
+    erw [HomologicalComplex.shortComplexFunctor_obj_X₃]
+    simp only [CochainComplex.next, CochainComplex.of_x]
+    exact σ₂
+  · dsimp
+    simp
+  · sorry
+  · sorry
 
-#exit
-noncomputable def homotopy_of_homotopic {X Y : ComposableArrows A 2} (u v : X ⟶ Y)
-    (h : homotopic u v) : Homotopy ((contractLeft A).map u) ((contractLeft A).map v) where
-  hom i j := match i, j with
-  | 0, 0 => 0
-  | 0, 1 => 0
-  | 0, 2 => 0
-  | 1, 0 => sorry
-  | 1, 1 => 0
-  | 1, 2 => 0
-  | 2, 0 => 0
-  | 2, 1 => sorry
-  | 2, 2 => 0
-  zero := sorry
-  comm := sorry
-
-lemma homology_map_eq_of_homotopic {X Y : ComposableArrows A 2} (u v : X ⟶ Y)
-    (h : homotopic u v) : (homology A).map u = (homology A).map v :=
-  Homotopy.homologyMap_eq (homotopy_of_homotopic u v h) _
 
 section Lift
 
