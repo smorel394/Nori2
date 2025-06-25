@@ -71,7 +71,7 @@ noncomputable def contractLeft : ComposableArrows A 2 ⥤ ShortComplex A where
     · rfl
 
 instance : (contractLeft A).Additive where
-  map_add {X Y f g} := by
+  map_add {_ _ _ _} := by
     ext
     · rw [← cancel_mono (kernel.ι _)]
       dsimp [contractLeft]; simp
@@ -156,6 +156,14 @@ noncomputable def contractRight : ComposableArrows A 2 ⥤ ShortComplex A where
     · rfl
     · dsimp; simp
 
+instance : (contractRight A).Additive where
+  map_add {_ _ _ _ } := by
+    ext
+    · dsimp [contractRight]
+    · dsimp [contractRight]
+    · rw [← cancel_epi (cokernel.π _)]
+      dsimp [contractRight]; simp
+
 noncomputable def functor_contractRight :
     functor_aux_complex A ≅ functor_aux A ⋙ contractRight A := by
   refine NatIso.ofComponents (fun X ↦ ?_) ?_
@@ -177,6 +185,10 @@ noncomputable def functor_contractRight :
 
 noncomputable def homologyRight : ComposableArrows A 2 ⥤ A :=
   contractRight A ⋙ ShortComplex.homologyFunctor _
+
+instance : (homologyRight A).Additive := by
+  dsimp [homologyRight]
+  infer_instance
 
 end ContractRight
 
@@ -314,6 +326,8 @@ end Contract
 
 section LiftAbelian
 
+noncomputable def homologyNatIso : homologyLeft A ≅ homologyRight A := sorry
+
 lemma homologyLeft_map_eq_of_homotopic (X Y : ComposableArrows A 2) (u v : X ⟶ Y)
     (h : homotopic u v) : (homologyLeft A).map u = (homologyLeft A).map v := by
   rw [← cancel_mono (ShortComplex.homologyMap ((contractNatTrans A).app Y))]
@@ -346,6 +360,9 @@ lemma homologyLeft_map_eq_of_homotopic (X Y : ComposableArrows A 2) (u v : X ⟶
     abel
   · dsimp [contractLeftToRight, contractRight, two]
     simp
+
+lemma homologyRight_map_eq_of_homotopic (X Y : ComposableArrows A 2) (u v : X ⟶ Y)
+    (h : homotopic u v) : (homologyRight A).map u = (homologyRight A).map v := by sorry
 
 variable (A)
 
