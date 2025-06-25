@@ -70,6 +70,15 @@ noncomputable def contractLeft : ComposableArrows A 2 ⥤ ShortComplex A where
     · rfl
     · rfl
 
+instance : (contractLeft A).Additive where
+  map_add {X Y f g} := by
+    ext
+    · rw [← cancel_mono (kernel.ι _)]
+      dsimp [contractLeft]; simp
+    · dsimp [contractLeft]
+    · dsimp [contractLeft]
+
+/-
 variable {A}
 
 /-! The counit of the adjunction `forget ⊢ contractLeft`.-/
@@ -84,6 +93,7 @@ lemma contractLeftToId_naturality {X Y : ComposableArrows A 2} (u : X ⟶ Y) :
     contractLeftToId X ≫ u := sorry
 
 variable (A)
+-/
 
 noncomputable def functor_contractLeft :
     functor_aux A ⋙ contractLeft A ≅ functor_aux_complex A := by
@@ -108,10 +118,14 @@ noncomputable def functor_contractLeft :
 noncomputable def homologyLeft : ComposableArrows A 2 ⥤ A :=
   contractLeft A ⋙ ShortComplex.homologyFunctor _
 
-instance : (homologyLeft A).Additive := sorry
+instance : (homologyLeft A).Additive := by
+  dsimp [homologyLeft]
+  infer_instance
 
+/-
 instance contractLeftToId_iso (X : ComposableArrows A 2) :
     IsIso ((homologyLeft A).map ((contractLeftToId X))) := sorry
+-/
 
 end ContractLeft
 
