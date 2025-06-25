@@ -28,7 +28,7 @@ noncomputable def functor_aux : C ⥤ ComposableArrows C 2 where
 
 noncomputable def functor : C ⥤ Adel C := functor_aux C ⋙ quotient C
 
-variable {C} {A : Type u'} [Category.{v'} A] [Abelian A] (F : C ⥤ A) [F.Additive]
+variable {C} {A : Type u'} [Category.{v'} A] [Abelian A]
 
 variable (A) in
 noncomputable def functor_aux_homology :
@@ -47,6 +47,7 @@ section ContractLeft
 
 variable (A)
 
+/-! This is the right of the fully faithful inclusion `ShortComplex A ⥤ ComposableArrows A 2`-/
 noncomputable def contractLeft : ComposableArrows A 2 ⥤ ShortComplex A where
   obj X := ShortComplex.mk (kernel.ι (X.map' 0 1 ≫ X.map' 1 2) ≫ X.map' 0 1) (X.map' 1 2) (by simp)
   map {X Y} u := by
@@ -68,6 +69,21 @@ noncomputable def contractLeft : ComposableArrows A 2 ⥤ ShortComplex A where
     · dsimp; simp
     · rfl
     · rfl
+
+variable {A}
+
+/-! The counit of the adjunction `forget ⊢ contractLeft`.-/
+noncomputable def contractLeftToId (X : ComposableArrows A 2) :
+    ((contractLeft A).obj X).toComposableArrows ⟶ X :=
+  ComposableArrows.homMk₂ (kernel.ι _) (𝟙 _) (𝟙 _) (by dsimp [contractLeft]; simp)
+  (by erw [id_comp, comp_id]; rfl)
+
+@[simp, reassoc]
+lemma contractLeftToId_naturality {X Y : ComposableArrows A 2} (u : X ⟶ Y) :
+    ShortComplex.mapToComposableArrows ((contractLeft A).map u) ≫ contractLeftToId Y =
+    contractLeftToId X ≫ u := sorry
+
+variable (A)
 
 noncomputable def functor_contractLeft :
     functor_aux A ⋙ contractLeft A ≅ functor_aux_complex A := by
@@ -91,6 +107,11 @@ noncomputable def functor_contractLeft :
 
 noncomputable def homologyLeft : ComposableArrows A 2 ⥤ A :=
   contractLeft A ⋙ ShortComplex.homologyFunctor _
+
+instance : (homologyLeft A).Additive := sorry
+
+instance contractLeftToId_iso (X : ComposableArrows A 2) :
+    IsIso ((homologyLeft A).map ((contractLeftToId X))) := sorry
 
 end ContractLeft
 
@@ -323,14 +344,6 @@ noncomputable def liftAbelian_functor : functor A ⋙ liftAbelian A ≅ 𝟭 A :
     (ShortComplex.homologyFunctor A) ≪≫ functor_aux_homology A
 
 end LiftAbelian
-
-section Lift
-
-variable (A)
-
-def lift : Adel C ⥤ A := sorry
-
-end Lift
 
 end Adel
 
