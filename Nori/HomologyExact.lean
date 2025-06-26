@@ -10,8 +10,6 @@ open scoped ZeroObject
 
 variable {A : Type u'} [Category.{v'} A] [Abelian A]
 
---variable (C : Type u) [Category.{v} C] [Preadditive C] [HasZeroObject C] (F : C ⥤ A) [F.Additive]
-
 namespace CategoryTheory
 
 namespace Adel
