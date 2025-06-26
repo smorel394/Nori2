@@ -1,6 +1,6 @@
 import Mathlib.CategoryTheory.Limits.Preserves.Basic
 import Nori.Mathlib.CategoryTheory.Limits.Shapes.Kernels
-import Nori.LiftAbelian
+import Nori.Homology
 
 universe u v u' v'
 
