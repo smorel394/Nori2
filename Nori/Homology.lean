@@ -102,7 +102,7 @@ noncomputable def functor_contractLeft :
 noncomputable def homologyLeft : ComposableArrows A 2 ⥤ A :=
   contractLeft A ⋙ ShortComplex.homologyFunctor _
 
-def functor_homologyLeft : functor_aux A ⋙ homologyLeft A ≅ 𝟭 A := sorry
+---def functor_homologyLeft : functor_aux A ⋙ homologyLeft A ≅ 𝟭 A := sorry
 
 instance : (homologyLeft A).Additive := by
   dsimp [homologyLeft]
@@ -375,7 +375,7 @@ instance : (homologyLeftAbelian A).Additive := Quotient.lift_additive _ _ _ _
 
 instance : (homologyRightAbelian A).Additive := Quotient.lift_additive _ _ _ _
 
-noncomputable def liftAbelian_functor : functor A ⋙ homologyLeftAbelian A ≅ 𝟭 A := by
+noncomputable def functor_homologyLeftAbelian : functor A ⋙ homologyLeftAbelian A ≅ 𝟭 A := by
   refine Functor.associator _ _ _ ≪≫ isoWhiskerLeft (functor_aux A) (Quotient.lift.isLift _ _ _)
     ≪≫ (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight (functor_contractLeft A)
     (ShortComplex.homologyFunctor A) ≪≫ functor_aux_homology A

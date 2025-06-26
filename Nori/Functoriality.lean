@@ -19,19 +19,6 @@ namespace CategoryTheory
 
 namespace Functor
 
-section Compat
-
-variable [HasZeroObject C] [HasZeroObject D]
-
-noncomputable def functor_mapComposableArrows : functor_aux C ⋙ F.mapComposableArrows 2 ≅
-    F ⋙ functor_aux D := by
-  refine NatIso.ofComponents (fun X ↦ ?_) ?_
-  · dsimp [functor_aux]
-    sorry
-  · sorry
-
-end Compat
-
 lemma functorAdel_aux (X Y : ComposableArrows C 2) (f g : X ⟶ Y) (h : homotopic f g) :
     (F.mapComposableArrows 2 ⋙ Adel.quotient D).map f =
     (F.mapComposableArrows 2 ⋙ Adel.quotient D).map g := by
@@ -45,6 +32,21 @@ lemma functorAdel_aux (X Y : ComposableArrows C 2) (f g : X ⟶ Y) (h : homotopi
 
 def functorAdel : Adel C ⥤ Adel D := by
   refine Quotient.lift _ (F.mapComposableArrows 2 ⋙ Adel.quotient D) (functorAdel_aux F)
+
+section Compat
+
+variable [HasZeroObject C] [HasZeroObject D]
+
+noncomputable def functor_mapComposableArrows : functor_aux C ⋙ F.mapComposableArrows 2 ≅
+    F ⋙ functor_aux D := by
+  refine NatIso.ofComponents (fun X ↦ ?_) ?_
+  · dsimp [functor_aux]
+    sorry
+  · sorry
+
+noncomputable def functor_functorAdel : functor C ⋙ F.functorAdel ≅ F ⋙ functor D := sorry
+
+end Compat
 
 instance (n : ℕ) : (F.mapComposableArrows n).Additive where
   map_add {X Y f g} := by
