@@ -44,7 +44,10 @@ noncomputable def functor_mapComposableArrows : functor_aux C ⋙ F.mapComposabl
     sorry
   · sorry
 
-noncomputable def functor_functorAdel : functor C ⋙ F.functorAdel ≅ F ⋙ functor D := sorry
+noncomputable def functor_functorAdel : functor C ⋙ F.functorAdel ≅ F ⋙ functor D :=
+  Functor.associator _ _ _ ≪≫ isoWhiskerLeft (functor_aux C) (Quotient.lift.isLift _
+  (F.mapComposableArrows 2 ⋙ Adel.quotient D) (functorAdel_aux F)) ≪≫
+  (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight F.functor_mapComposableArrows (quotient D)
 
 end Compat
 
