@@ -284,37 +284,40 @@ lemma homology_comp_zero : (homologyRight A).map (candι u) ≫ (homologyRight A
   rw [← Functor.map_comp, ← (homologyRight A).map_zero]
   exact homologyRight_map_eq_of_homotopic _ _ _ _ (candcondition u)
 
-#exit
-
 lemma exact : (ShortComplex.mk _ _ (homology_comp_zero u)).Exact := by
   rw [ShortComplex.exact_iff_exact_up_to_refinements]
   intro A₀ a₀ h₀
   dsimp at a₀ h₀
-  obtain ⟨A₁, π, _, a₁, h₁⟩ := (epi_iff_surjective_up_to_refinements
-    ((contractLeft A).obj Y).homologyπ).mp inferInstance a₀
-  set S := ShortComplex.mk ((contractLeft A).obj (candcoker u)).toCycles ((contractLeft A).obj
-    (candcoker u)).homologyπ ((contractLeft A).obj (candcoker u)).toCycles_comp_homologyπ
-  obtain ⟨A₂, π', _, a₂, h₂⟩ := S.exact_iff_exact_up_to_refinements.mp
-    (S.exact_of_g_is_cokernel ((contractLeft A).obj (candcoker u)).homologyIsCokernel)
-    (a₁ ≫ ShortComplex.cyclesMap ((contractLeft A).map (candπ u)))
-    (by rw [assoc, ← ShortComplex.homologyπ_naturality, ← assoc a₁, ← h₁, assoc]
-        convert comp_zero)
-  have h₂' : (a₂ ≫ kernel.ι _ ≫ biprod.snd) ≫ ((contractLeft A).obj X).g = 0 := by
-    change _ ≫ X.map' 1 2 = 0
-    simp only [assoc]
-    rw [image_snd, comp_zero]
-  use A₂, π' ≫ π, inferInstance, ((contractLeft A).obj X).liftCycles _ h₂' ≫
-    ((contractLeft A).obj X).homologyπ
-  simp only [homologyLeft, comp_obj, ShortComplex.homologyFunctor_obj, Functor.comp_map,
-    ShortComplex.homologyFunctor_map, assoc, ShortComplex.homologyπ_naturality]
-  apply_fun (fun x ↦ x ≫ inv (ShortComplex.cyclesMap ((contractLeft A).map (candπ u)))) at h₂
-  rw [assoc, assoc, IsIso.hom_inv_id, comp_id] at h₂
-  rw [h₁, ← assoc, h₂, assoc a₂, toCycles_cyclesMap_inv_eq, Preadditive.comp_add,
-    Preadditive.add_comp, assoc, liftCycles_homology, comp_zero, zero_add, ← assoc _ (ShortComplex.cyclesMap _)]
-  congr 1
-  rw [← cancel_mono ((contractLeft A).obj Y).iCycles]
-  simp only [assoc, ShortComplex.liftCycles_i, ShortComplex.liftCycles_comp_cyclesMap]
-  rfl
+  set a₁ := a₀ ≫ ((contractRight A).obj X).homologyι with ha₁
+  have h₁ : a₁ ≫ ShortComplex.opcyclesMap ((contractRight A).map u) = 0 := sorry
+  have : a₁ ≫ inv (ShortComplex.opcyclesMap ((contractRight A).map (candι u))) ≫
+      ((contractRight A).obj (candker u)).fromOpcycles = 0 := by
+    rw [toCycles_cyclesMap_inv_eq, Preadditive.comp_add]
+    conv_lhs => congr; rw [ha₁, assoc, homology_descOpcycles, comp_zero]
+    rw [zero_add]
+    obtain ⟨A₁, π, _, a₁', h₁'⟩ := (epi_iff_surjective_up_to_refinements
+      ((contractRight A).obj X).pOpcycles).mp inferInstance a₁
+    rw [← cancel_epi π, ← assoc π a₁, h₁', assoc, ShortComplex.p_descOpcycles, comp_zero]
+    have h₁'' : (a₁' ≫ u.app one) ≫ ((contractRight A).obj Y).pOpcycles = 0 := by
+      change (a₁' ≫ ((contractRight A).map u).τ₂) ≫ _ = 0
+      rw [assoc, ← ShortComplex.p_opcyclesMap, ← assoc, ← h₁', ha₁, assoc, assoc,
+        ← ShortComplex.homologyι_naturality, ← assoc a₀]
+      erw [h₀]
+      simp
+    set S := ShortComplex.mk (Y.map' 0 1) ((contractRight A).obj Y).pOpcycles
+      ((contractRight A).obj Y).f_pOpcycles
+    obtain ⟨A₂, π', _, a₂, h₂⟩ := S.exact_iff_exact_up_to_refinements.mp (S.exact_of_g_is_cokernel
+      ((contractRight A).obj Y).opcyclesIsCokernel) (a₁' ≫ u.app one) h₁''
+    rw [← cancel_epi π', reassoc_of% h₂, inr_image, comp_zero, comp_zero]
+  set a₂ := ((contractRight A).obj (candker u)).liftHomology (a₁ ≫ inv (ShortComplex.opcyclesMap
+    ((contractRight A).map (candι u)))) (by rw [assoc, this])
+  use A₀, 𝟙 _, inferInstance, a₂
+  change _ = _ ≫ (homologyRight A).map (candι u)
+  rw [id_comp, ← cancel_mono ((contractRight A).obj X).homologyι, assoc]
+  dsimp [homologyRight]
+  rw [ShortComplex.homologyι_naturality, ← ha₁]
+  change _ = a₂ ≫ ((contractRight A).obj (candker u)).homologyι ≫ _
+  rw [← assoc, ShortComplex.liftHomology_ι, assoc, IsIso.inv_hom_id, comp_id]
 
 end LeftExact
 
