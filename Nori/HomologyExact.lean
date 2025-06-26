@@ -1,4 +1,5 @@
 import Mathlib.CategoryTheory.Limits.Preserves.Basic
+import Mathlib.CategoryTheory.Preadditive.LeftExact
 import Nori.Mathlib.CategoryTheory.Limits.Shapes.Kernels
 import Nori.Homology
 
@@ -412,6 +413,20 @@ instance {X Y : Adel A} (u : X ⟶ Y) : PreservesLimit (parallelPair u 0) (homol
 end Preserves
 
 end LeftExact
+
+section PreservesFiniteLimits
+
+local instance : HasFiniteBiproducts A := HasFiniteBiproducts.of_hasFiniteProducts
+
+local instance : HasBinaryBiproducts (Adel A) := hasBinaryBiproducts_of_finite_biproducts _
+
+instance : PreservesFiniteColimits (homologyLeftAbelian A) :=
+  (homologyLeftAbelian A).preservesFiniteColimits_of_preservesCokernels
+
+instance : PreservesFiniteLimits (homologyLeftAbelian A) :=
+  (homologyLeftAbelian A).preservesFiniteLimits_of_preservesKernels
+
+end PreservesFiniteLimits
 
 end Adel
 

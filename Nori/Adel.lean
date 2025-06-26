@@ -431,7 +431,6 @@ instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
     HasColimit (parallelPair u' 0 ⋙ quotient C) :=
   HasColimit.mk {cocone := cocone_aux u', isColimit := cocone_isColimit u'}
 
-open WalkingParallelPair WalkingParallelPairHom in
 noncomputable instance {X Y : Adel C} (u : X ⟶ Y) : HasColimit (parallelPair u 0) := by
   set X' := (quotient C).objPreimage X
   set Y' := (quotient C).objPreimage Y
@@ -449,6 +448,8 @@ noncomputable instance {X Y : Adel C} (u : X ⟶ Y) : HasColimit (parallelPair u
       | .right => dsimp [g]; simp
   rw [← hasColimit_iff_of_iso ι]
   infer_instance
+
+instance : HasCokernels (Adel C) where
 
 end Cokernels
 
@@ -605,7 +606,6 @@ instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
     HasLimit (parallelPair u' 0 ⋙ quotient C) :=
   HasLimit.mk {cone := cone_aux u', isLimit := cone_isLimit u'}
 
-open WalkingParallelPair WalkingParallelPairHom in
 noncomputable instance {X Y : Adel C} (u : X ⟶ Y) : HasLimit (parallelPair u 0) := by
   set X' := (quotient C).objPreimage X
   set Y' := (quotient C).objPreimage Y
@@ -624,6 +624,8 @@ noncomputable instance {X Y : Adel C} (u : X ⟶ Y) : HasLimit (parallelPair u 0
   rw [← hasLimit_iff_of_iso ι]
   infer_instance
 
+instance : HasKernels (Adel C) where
+
 end Kernels
 
 section NormalEpi
@@ -632,7 +634,6 @@ open CandidateKer CandidateCoker
 
 variable [HasBinaryBiproducts C]
 
-open WalkingParallelPair WalkingParallelPairHom in
 noncomputable def isoCocone {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
     parallelPair (candι u') 0 ⋙ quotient C ≅ parallelPair ((quotient C).map (candι u')) 0 := by
   refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
@@ -855,7 +856,6 @@ lemma compat₂ {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient 
   rw [← (quotient C).map_comp, quotient_map_eq_iff]
   exact compat u'
 
-open WalkingParallelPair WalkingParallelPairHom in
 noncomputable instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
     NormalEpi ((quotient C).map u') where
   W := (quotient C).obj (candker u')
@@ -892,7 +892,6 @@ noncomputable instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((qu
           exact this
     exact IsColimit.equivOfNatIsoOfIso ι _ _ e (cocone_isColimit (candι u'))
 
-open WalkingParallelPair WalkingParallelPairHom in
 noncomputable instance {X Y : Adel C} (u : X ⟶ Y) [Epi u] : NormalEpi u := by
   set e := (quotient _).objObjPreimageIso X
   set f := (quotient _).objObjPreimageIso Y
@@ -931,10 +930,30 @@ noncomputable instance : IsNormalEpiCategory (Adel C) where
 
 end NormalEpi
 
+section NormalMono
+/-
+TODO: use duality to prove that `Adel C` is a normal mono category.
+-/
+
+variable [HasBinaryBiproducts C]
+
+noncomputable instance : IsNormalMonoCategory (Adel C) := sorry
+
+end NormalMono
+
+section Abelian
+
+variable [HasFiniteBiproducts C]
+
+local instance : HasBinaryBiproducts C := hasBinaryBiproducts_of_finite_biproducts _
+
+instance : Abelian (Adel C) where
+
+end Abelian
+
 section Preserves
 
 variable {D : Type u'} [Category.{v'} D] (F : Adel C ⥤ D)
-
 
 def preservesKernels_of_preservesKernelsComposableArrows (hF : ∀ {X Y : ComposableArrows C 2}
     (u : X ⟶ Y), PreservesLimit (parallelPair ((quotient C).map u) 0) F) {X Y : Adel C}
