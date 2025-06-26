@@ -170,64 +170,53 @@ lemma exact : (ShortComplex.mk _ _ (homology_comp_zero u)).Exact := by
   simp only [assoc, ShortComplex.liftCycles_i, ShortComplex.liftCycles_comp_cyclesMap]
   rfl
 
-noncomputable def preservesCokernels_aux : IsColimit ((liftAbelian A).mapCocone ((Cocones.precompose
+section Preserves
+
+noncomputable def preservesCokernels_aux : IsColimit ((homologyLeftAbelian A).mapCocone ((Cocones.precompose
     (compNatIso' (quotient A)).inv).obj (cocone_aux u))) := by
   have := (ShortComplex.exact_and_epi_g_iff_g_is_cokernel _).mp ⟨RightExact.exact u, inferInstance⟩
   dsimp at this
-  set α : parallelPair ((quotient A).map u) 0 ⋙ liftAbelian A ≅
+  set α : parallelPair ((quotient A).map u) 0 ⋙ homologyLeftAbelian A ≅
       parallelPair ((homologyLeft A).map u) 0 := by
-    refine parallelPair.ext ((quotient_liftAbelian A).app X) ((quotient_liftAbelian A).app Y) ?_ ?_
-    · dsimp; rw [← (quotient_liftAbelian A).hom.naturality]; rfl
+    refine parallelPair.ext ((quotient_homologyLeftAbelian A).app X) ((quotient_homologyLeftAbelian A).app Y) ?_ ?_
+    · dsimp; rw [← (quotient_homologyLeftAbelian A).hom.naturality]; rfl
     · dsimp; simp
   refine (IsColimit.equivOfNatIsoOfIso α _ _ ?_).invFun (Classical.choice this)
   refine Cocones.ext (Iso.refl _) (fun j ↦ ?_)
   match j with
   | WalkingParallelPair.zero =>
     dsimp [α, compNatIso', cocone_aux]
-    rw [← cancel_epi ((quotient_liftAbelian A).hom.app X)]
+    rw [← cancel_epi ((quotient_homologyLeftAbelian A).hom.app X)]
     simp only [comp_obj, id_comp, comp_id, Iso.hom_inv_id_app_assoc]
-    conv_rhs => rw [← Functor.map_comp, ← (quotient_liftAbelian A).hom.naturality]
+    conv_rhs => rw [← Functor.map_comp, ← (quotient_homologyLeftAbelian A).hom.naturality]
     convert (comp_id _).symm
   | WalkingParallelPair.one =>
     dsimp [α, compNatIso', cocone_aux]
-    rw [← cancel_epi ((quotient_liftAbelian A).hom.app Y)]
+    rw [← cancel_epi ((quotient_homologyLeftAbelian A).hom.app Y)]
     simp only [comp_obj, id_comp, comp_id, Iso.hom_inv_id_app_assoc]
-    rw [← (quotient_liftAbelian A).hom.naturality]
+    rw [← (quotient_homologyLeftAbelian A).hom.naturality]
     convert (comp_id _).symm
 
-instance : PreservesColimit (parallelPair ((quotient A).map u) 0) (liftAbelian A) where
+def preservesCokernelsComposableArrows : PreservesColimit (parallelPair ((quotient A).map u) 0)
+    (homologyLeftAbelian A) where
   preserves hc := by
-    have := (cocone_isColimit u)
     set e := hc.uniqueUpToIso ((IsColimit.precomposeHomEquiv (compNatIso' (quotient A)).symm
       (cocone_aux u)).invFun (cocone_isColimit u))
-    have h : IsColimit ((liftAbelian A).mapCocone ((Cocones.precompose (compNatIso'
+    have h : IsColimit ((homologyLeftAbelian A).mapCocone ((Cocones.precompose (compNatIso'
       (quotient A)).inv).obj (cocone_aux u))) := preservesCokernels_aux u
-    exact Nonempty.intro (h.ofIsoColimit ((Cocones.functoriality _ (liftAbelian A)).mapIso e).symm)
+    exact Nonempty.intro (h.ofIsoColimit ((Cocones.functoriality _ (homologyLeftAbelian A)).mapIso e).symm)
 
-open WalkingParallelPair WalkingParallelPairHom in
-instance {X Y : Adel A} (u : X ⟶ Y) : PreservesColimit (parallelPair u 0) (liftAbelian A) where
-  preserves {c} hc := by
-    refine Nonempty.intro ?_
-    set X' := (quotient A).objPreimage X
-    set Y' := (quotient A).objPreimage Y
-    set u' := (quotient A).preimage (((quotient A).objObjPreimageIso X).hom ≫ u ≫
-      ((quotient A).objObjPreimageIso Y).inv)
-    set α : parallelPair ((quotient A).map u') 0 ≅ parallelPair u 0 := by
-      refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
-      · match j with
-        | .zero => exact (quotient A).objObjPreimageIso X
-        | .one => exact (quotient A).objObjPreimageIso Y
-      · match u with
-        | .id _ => dsimp; simp
-        | .left => dsimp [u']; simp
-        | .right => dsimp; simp
-    have hc' := (IsColimit.precomposeHomEquiv α c).invFun hc
-    exact (IsColimit.precomposeHomEquiv (isoWhiskerRight α (liftAbelian A)) _).toFun
-      ((isColimitOfPreserves (liftAbelian A) hc').ofIsoColimit
-      (liftAbelian A).mapCoconePrecomposeEquivalenceFunctor)
+instance {X Y : Adel A} (u : X ⟶ Y) : PreservesColimit (parallelPair u 0) (homologyLeftAbelian A) :=
+  preservesCokernels_of_preservesCokernelsComposableArrows (homologyLeftAbelian A)
+  preservesCokernelsComposableArrows u
+
+end Preserves
 
 end RightExact
 
+/-
+The morally correct way to do would be to use opposite categories.
+-/
 namespace LeftExact
 
 open CandidateKer
@@ -376,15 +365,55 @@ lemma exact : (ShortComplex.mk _ _ (homology_comp_zero u)).Exact := by
   change _ = a₂ ≫ ((contractRight A).obj (candker u)).homologyι ≫ _
   rw [← assoc, ShortComplex.liftHomology_ι, assoc, IsIso.inv_hom_id, comp_id]
 
+section Preserves
+
+noncomputable def preservesKernels_aux : IsLimit ((homologyRightAbelian A).mapCone ((Cones.postcompose
+    (compNatIso' (quotient A)).hom).obj (cone_aux u))) := by
+  have := (ShortComplex.exact_and_mono_f_iff_f_is_kernel _).mp ⟨LeftExact.exact u, inferInstance⟩
+  dsimp at this
+  set α : parallelPair ((quotient A).map u) 0 ⋙ homologyRightAbelian A ≅
+      parallelPair ((homologyRight A).map u) 0 := by
+    refine parallelPair.ext ((quotient_homologyRightAbelian A).app X)
+      ((quotient_homologyRightAbelian A).app Y) ?_ ?_
+    · dsimp; rw [← (quotient_homologyRightAbelian A).hom.naturality]; rfl
+    · dsimp; simp
+  refine (IsLimit.equivOfNatIsoOfIso α _ _ ?_).invFun (Classical.choice this)
+  refine Cones.ext (Iso.refl _) (fun j ↦ ?_)
+  match j with
+  | WalkingParallelPair.zero =>
+    dsimp [α, compNatIso', cone_aux]
+    rw [← cancel_mono ((quotient_homologyRightAbelian A).inv.app X)]
+    simp only [comp_obj, comp_id, assoc,
+      Iso.hom_inv_id_app, id_comp, NatTrans.naturality, Functor.comp_map]
+    conv_rhs => erw [← (quotient_homologyRightAbelian A).inv.naturality]
+    convert (comp_id _).symm
+  | WalkingParallelPair.one =>
+    dsimp [α, compNatIso', cone_aux]
+    rw [← cancel_mono ((quotient_homologyRightAbelian A).inv.app Y)]
+    simp only [comp_obj, comp_id, map_comp, assoc,
+      Iso.hom_inv_id_app, id_comp, NatTrans.naturality, Functor.comp_map, NatTrans.naturality_assoc]
+    rw [← Functor.map_comp]; erw [← (quotient_homologyRightAbelian A).inv.naturality]
+    convert (comp_id _).symm
+
+lemma preservesKernelsComposableArrows :
+    PreservesLimit (parallelPair ((quotient A).map u) 0) (homologyRightAbelian A) where
+  preserves hc := by
+    set e := hc.uniqueUpToIso ((IsLimit.postcomposeHomEquiv (compNatIso' (quotient A))
+      (cone_aux u)).invFun (cone_isLimit u))
+    have h : IsLimit ((homologyRightAbelian A).mapCone ((Cones.postcompose (compNatIso'
+      (quotient A)).hom).obj (cone_aux u))) := preservesKernels_aux u
+    exact Nonempty.intro (h.ofIsoLimit ((Cones.functoriality _ (homologyRightAbelian A)).mapIso e).symm)
+
+instance {X Y : Adel A} (u : X ⟶ Y) : PreservesLimit (parallelPair u 0) (homologyRightAbelian A) :=
+  preservesKernels_of_preservesKernelsComposableArrows (homologyRightAbelian A)
+  preservesKernelsComposableArrows u
+
+instance {X Y : Adel A} (u : X ⟶ Y) : PreservesLimit (parallelPair u 0) (homologyLeftAbelian A) :=
+  preservesLimit_of_natIso (parallelPair u 0) (homologyIsoAbelian A).symm
+
+end Preserves
+
 end LeftExact
-
-section Lift
-
-variable (A)
-
---def lift : Adel C ⥤ A := sorry
-
-end Lift
 
 end Adel
 

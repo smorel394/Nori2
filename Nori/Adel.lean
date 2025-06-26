@@ -5,7 +5,7 @@ import Mathlib.CategoryTheory.ComposableArrows
 import Mathlib.CategoryTheory.Limits.Shapes.Kernels
 
 
-universe u v
+universe u v u' v'
 
 open CategoryTheory Category Functor Limits
 
@@ -84,11 +84,6 @@ instance : (quotient C).Full := Quotient.full_functor _
 
 instance : (quotient C).EssSurj := Quotient.essSurj_functor _
 
--- Is this useful? It's very evil.
-lemma quotient_obj_surjective (X : Adel C) :
-    ∃ (K : ComposableArrows C 2), (quotient _).obj K = X :=
-  ⟨_, rfl⟩
-
 instance : Preadditive (Adel C) := Quotient.preadditive _ (by
   rintro _ _ _ _ _ _ ⟨σ₁, σ₂, eq⟩ ⟨σ₁', σ₂', eq'⟩
   use σ₁ + σ₁', σ₂ + σ₂'
@@ -97,7 +92,7 @@ instance : Preadditive (Adel C) := Quotient.preadditive _ (by
   simp only [Fin.isValue, homOfLE_leOfHom, Preadditive.add_comp, Preadditive.comp_add]
   abel)
 
-instance : (quotient C).Additive where
+instance : (quotient C).Additive := Quotient.functor_additive _ _
 
 lemma quotient_map_epi_iff {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
     Epi ((quotient C).map u') ↔ ∀ {T : ComposableArrows C 2} (v : Y' ⟶ T),
@@ -935,6 +930,58 @@ noncomputable instance : IsNormalEpiCategory (Adel C) where
   normalEpiOfEpi _ _ := Nonempty.intro inferInstance
 
 end NormalEpi
+
+section Preserves
+
+variable {D : Type u'} [Category.{v'} D] (F : Adel C ⥤ D)
+
+
+def preservesKernels_of_preservesKernelsComposableArrows (hF : ∀ {X Y : ComposableArrows C 2}
+    (u : X ⟶ Y), PreservesLimit (parallelPair ((quotient C).map u) 0) F) {X Y : Adel C}
+    (u : X ⟶ Y) : PreservesLimit (parallelPair u 0) F where
+  preserves {c} hc := by
+    refine Nonempty.intro ?_
+    set X' := (quotient C).objPreimage X
+    set Y' := (quotient C).objPreimage Y
+    set u' := (quotient C).preimage (((quotient C).objObjPreimageIso X).hom ≫ u ≫
+      ((quotient C).objObjPreimageIso Y).inv)
+    set α : parallelPair ((quotient C).map u') 0 ≅ parallelPair u 0 := by
+      refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
+      · match j with
+        | .zero => exact (quotient C).objObjPreimageIso X
+        | .one => exact (quotient C).objObjPreimageIso Y
+      · match u with
+        | .id _ => dsimp; simp
+        | .left => dsimp [u']; simp
+        | .right => dsimp; simp
+    have hc' := (IsLimit.postcomposeHomEquiv α.symm c).invFun hc
+    exact (IsLimit.postcomposeHomEquiv (isoWhiskerRight α.symm F) _).toFun
+      ((isLimitOfPreserves F hc').ofIsoLimit
+      F.mapConePostcomposeEquivalenceFunctor)
+
+def preservesCokernels_of_preservesCokernelsComposableArrows (hF : ∀ {X Y : ComposableArrows C 2}
+    (u : X ⟶ Y), PreservesColimit (parallelPair ((quotient C).map u) 0) F) {X Y : Adel C}
+    (u : X ⟶ Y) : PreservesColimit (parallelPair u 0) F where
+  preserves {c} hc := by
+    refine Nonempty.intro ?_
+    set X' := (quotient C).objPreimage X
+    set Y' := (quotient C).objPreimage Y
+    set u' := (quotient C).preimage (((quotient C).objObjPreimageIso X).hom ≫ u ≫
+      ((quotient C).objObjPreimageIso Y).inv)
+    set α : parallelPair ((quotient C).map u') 0 ≅ parallelPair u 0 := by
+      refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
+      · match j with
+        | .zero => exact (quotient C).objObjPreimageIso X
+        | .one => exact (quotient C).objObjPreimageIso Y
+      · match u with
+        | .id _ => dsimp; simp
+        | .left => dsimp [u']; simp
+        | .right => dsimp; simp
+    have hc' := (IsColimit.precomposeHomEquiv α c).invFun hc
+    exact (IsColimit.precomposeHomEquiv (isoWhiskerRight α F) _).toFun
+      ((isColimitOfPreserves F hc').ofIsoColimit F.mapCoconePrecomposeEquivalenceFunctor)
+
+end Preserves
 
 end Adel
 

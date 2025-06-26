@@ -1,6 +1,7 @@
 import Mathlib.Algebra.Group.Fin.Basic
 import Mathlib.CategoryTheory.Abelian.Refinements
 import Mathlib.Algebra.Homology.ExactSequence
+import Nori.Mathlib.CategoryTheory.Quotient.Preadditive
 import Nori.Adel
 
 universe u v u' v'
@@ -78,23 +79,6 @@ instance : (contractLeft A).Additive where
     · dsimp [contractLeft]
     · dsimp [contractLeft]
 
-/-
-variable {A}
-
-/-! The counit of the adjunction `forget ⊢ contractLeft`.-/
-noncomputable def contractLeftToId (X : ComposableArrows A 2) :
-    ((contractLeft A).obj X).toComposableArrows ⟶ X :=
-  ComposableArrows.homMk₂ (kernel.ι _) (𝟙 _) (𝟙 _) (by dsimp [contractLeft]; simp)
-  (by erw [id_comp, comp_id]; rfl)
-
-@[simp, reassoc]
-lemma contractLeftToId_naturality {X Y : ComposableArrows A 2} (u : X ⟶ Y) :
-    ShortComplex.mapToComposableArrows ((contractLeft A).map u) ≫ contractLeftToId Y =
-    contractLeftToId X ≫ u := sorry
-
-variable (A)
--/
-
 noncomputable def functor_contractLeft :
     functor_aux A ⋙ contractLeft A ≅ functor_aux_complex A := by
   refine NatIso.ofComponents (fun X ↦ ?_) ?_
@@ -121,11 +105,6 @@ noncomputable def homologyLeft : ComposableArrows A 2 ⥤ A :=
 instance : (homologyLeft A).Additive := by
   dsimp [homologyLeft]
   infer_instance
-
-/-
-instance contractLeftToId_iso (X : ComposableArrows A 2) :
-    IsIso ((homologyLeft A).map ((contractLeftToId X))) := sorry
--/
 
 end ContractLeft
 
@@ -326,7 +305,11 @@ end Contract
 
 section LiftAbelian
 
-noncomputable def homologyNatIso : homologyLeft A ≅ homologyRight A := sorry
+noncomputable def homologyNatIso : homologyLeft A ≅ homologyRight A := by
+  refine NatIso.ofComponents
+    (fun X ↦ asIso (ShortComplex.homologyMap ((contractNatTrans A).app X))) (fun f ↦ ?_)
+  dsimp [homologyLeft, homologyRight]
+  simp [← ShortComplex.homologyMap_comp, comp_contractNatTrans, ← contractNatTrans_comp]
 
 lemma homologyLeft_map_eq_of_homotopic (X Y : ComposableArrows A 2) (u v : X ⟶ Y)
     (h : homotopic u v) : (homologyLeft A).map u = (homologyLeft A).map v := by
@@ -362,22 +345,35 @@ lemma homologyLeft_map_eq_of_homotopic (X Y : ComposableArrows A 2) (u v : X ⟶
     simp
 
 lemma homologyRight_map_eq_of_homotopic (X Y : ComposableArrows A 2) (u v : X ⟶ Y)
-    (h : homotopic u v) : (homologyRight A).map u = (homologyRight A).map v := by sorry
+    (h : homotopic u v) : (homologyRight A).map u = (homologyRight A).map v := by
+  rw [← cancel_mono (homologyNatIso.inv.app Y)]
+  simp only [NatTrans.naturality, NatIso.cancel_natIso_inv_left]
+  exact homologyLeft_map_eq_of_homotopic X Y u v h
 
 variable (A)
 
-noncomputable def liftAbelian : Adel A ⥤ A :=
+noncomputable def homologyLeftAbelian : Adel A ⥤ A :=
   Quotient.lift _ (homologyLeft A) homologyLeft_map_eq_of_homotopic
 
-noncomputable def quotient_liftAbelian : quotient A ⋙ liftAbelian A ≅ homologyLeft A :=
+noncomputable def homologyRightAbelian : Adel A ⥤ A :=
+  Quotient.lift _ (homologyRight A) homologyRight_map_eq_of_homotopic
+
+noncomputable def homologyIsoAbelian : homologyLeftAbelian A ≅ homologyRightAbelian A :=
+  Quotient.natIsoLift _ (Quotient.lift.isLift _ (homologyLeft A) homologyLeft_map_eq_of_homotopic
+  ≪≫ homologyNatIso ≪≫ (Quotient.lift.isLift _ (homologyRight A)
+  homologyRight_map_eq_of_homotopic).symm)
+
+noncomputable def quotient_homologyLeftAbelian : quotient A ⋙ homologyLeftAbelian A ≅ homologyLeft A :=
   Quotient.lift.isLift _ _ _
 
-instance : (liftAbelian A).Additive where
-  map_add {X Y f g} := by
-    dsimp [liftAbelian]
-    sorry
+noncomputable def quotient_homologyRightAbelian : quotient A ⋙ homologyRightAbelian A ≅ homologyRight A :=
+  Quotient.lift.isLift _ _ _
 
-noncomputable def liftAbelian_functor : functor A ⋙ liftAbelian A ≅ 𝟭 A := by
+instance : (homologyLeftAbelian A).Additive := Quotient.lift_additive _ _ _ _
+
+instance : (homologyRightAbelian A).Additive := Quotient.lift_additive _ _ _ _
+
+noncomputable def liftAbelian_functor : functor A ⋙ homologyLeftAbelian A ≅ 𝟭 A := by
   refine Functor.associator _ _ _ ≪≫ isoWhiskerLeft (functor_aux A) (Quotient.lift.isLift _ _ _)
     ≪≫ (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight (functor_contractLeft A)
     (ShortComplex.homologyFunctor A) ≪≫ functor_aux_homology A
