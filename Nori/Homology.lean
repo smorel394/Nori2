@@ -102,6 +102,8 @@ noncomputable def functor_contractLeft :
 noncomputable def homologyLeft : ComposableArrows A 2 ⥤ A :=
   contractLeft A ⋙ ShortComplex.homologyFunctor _
 
+def functor_homologyLeft : functor_aux A ⋙ homologyLeft A ≅ 𝟭 A := sorry
+
 instance : (homologyLeft A).Additive := by
   dsimp [homologyLeft]
   infer_instance

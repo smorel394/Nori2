@@ -27,6 +27,8 @@ noncomputable def functor_mapComposableArrows : functor_aux C ⋙ F.mapComposabl
     F ⋙ functor_aux D := by
   refine NatIso.ofComponents (fun X ↦ ?_) ?_
   · dsimp [functor_aux]
+    sorry
+  · sorry
 
 end Compat
 
