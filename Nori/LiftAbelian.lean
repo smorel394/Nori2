@@ -369,6 +369,14 @@ variable (A)
 noncomputable def liftAbelian : Adel A ⥤ A :=
   Quotient.lift _ (homologyLeft A) homologyLeft_map_eq_of_homotopic
 
+noncomputable def quotient_liftAbelian : quotient A ⋙ liftAbelian A ≅ homologyLeft A :=
+  Quotient.lift.isLift _ _ _
+
+instance : (liftAbelian A).Additive where
+  map_add {X Y f g} := by
+    dsimp [liftAbelian]
+    sorry
+
 noncomputable def liftAbelian_functor : functor A ⋙ liftAbelian A ≅ 𝟭 A := by
   refine Functor.associator _ _ _ ≪≫ isoWhiskerLeft (functor_aux A) (Quotient.lift.isLift _ _ _)
     ≪≫ (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight (functor_contractLeft A)
