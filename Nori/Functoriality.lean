@@ -65,6 +65,143 @@ section Calculs
 
 open CandidateKer CandidateCoker
 
+variable (C)
+
+noncomputable def contract₁ :
+    ComposableArrows C 2 ⥤ ComposableArrows C 2 where
+  obj X := ComposableArrows.mk₂ (0 : 0 ⟶ X.obj zero) (X.map' 0 1 ≫ X.map' 1 2)
+  map u := ComposableArrows.homMk₂ 0 (u.app zero) (u.app two)
+    (by dsimp; simp) (by change (_ ≫ _) ≫ _ = _ ≫ _ ≫ _
+                         rw [assoc, u.naturality, u.naturality_assoc])
+  map_id X := by
+    ext
+    · dsimp; simp
+    · dsimp
+    · dsimp; rfl
+  map_comp _ _ := by
+    ext
+    · dsimp; simp
+    · dsimp
+    · dsimp; rfl
+
+/-
+noncomputable def contract₀  : ComposableArrows C 2 ⥤ ComposableArrows C 2 :=
+  (evaluation _ _).obj zero ⋙ functor_aux C
+
+noncomputable def contract_ι : contract₁ C ⟶ contract₀ C where
+  app X := ComposableArrows.homMk₂ 0 (𝟙 _) 0 (by change 0 ≫ _ = _ ≫ 0; simp)
+    (by change _ ≫ 0 = _ ≫ 0; simp)
+  naturality _ _ u := by
+    ext
+    · dsimp; simp
+    · dsimp; simp; rfl
+    · change _ ≫ 0 = 0 ≫ _; simp
+-/
+
+
+variable {C}
+
+noncomputable def contract₁_iso_candker (X : ComposableArrows C 2) : (contract₁ C).obj X ≅
+    candker ((functor_aux C).map (X.map' 0 1) ≫ (functor_aux C).map (X.map' 1 2)) := by
+  refine ComposableArrows.isoMk₂ ?_ ?_ ?_ ?_ ?_
+  · exact isoBiprodZero (isZero_zero _)
+  · exact isoBiprodZero (isZero_zero _)
+  · exact isoZeroBiprod (isZero_zero _)
+  · dsimp [contract₁, functor_aux, functor_aux_complex]
+    simp
+  · simp only [NatTrans.comp_app, id_eq, isoZeroBiprod_hom, isoBiprodZero_hom]
+    change _ = _ ≫ (biprod.map _ _  + _)
+    rw [Preadditive.comp_add, biprod.inl_map]
+    erw [biprod.inl_fst_assoc]
+    change _ = 0 ≫ _ + _ ≫ _
+    rw [zero_comp, zero_add]
+    rfl
+
+noncomputable def contract₁_ι (X : ComposableArrows C 2) :
+    (contract₁ C).obj X ⟶ (functor_aux C).obj (X.obj zero) :=
+  ComposableArrows.homMk₂ 0 (𝟙 _) 0 (by change 0 ≫ _ = 0 ≫ _; simp)
+  (by change _ ≫ 0 = _ ≫ 0; simp)
+
+lemma contract₁_iso_candker_ι (X : ComposableArrows C 2) :
+    (contract₁_iso_candker X).hom ≫ candι _ = contract₁_ι X := by
+  ext
+  · dsimp [contract₁_iso_candker, contract₁, contract₁_ι]
+    erw [biprod.inl_fst]
+    simp
+  · dsimp [contract₁_iso_candker, contract₁_ι]
+    erw [biprod.inl_fst]
+  · dsimp [contract₁_iso_candker, contract₁_ι]
+    change biprod.inr ≫ biprod.fst  = _
+    rw [biprod.inr_fst]
+
+
+
+variable (C)
+
+noncomputable def contract₂ : ComposableArrows C 2 ⥤ ComposableArrows C 2 :=
+  (evaluation _ _).obj one ⋙ functor_aux C
+
+noncomputable def contract₃ : ComposableArrows C 2 ⥤ ComposableArrows C 2 :=
+  (evaluation _ _).obj two ⋙ functor_aux C
+
+noncomputable def contract_f : contract₁ C ⟶ contract₂ C where
+  app X := ComposableArrows.homMk₂ 0 (X.map' 0 1) 0 (by change 0 ≫ _ = _; simp)
+    (by change _ = _ ≫ 0; simp)
+  naturality _ _ u := by
+    ext
+    · dsimp; simp
+    · change u.app zero ≫ _ = _ ≫ u.app one
+      dsimp
+      simp
+    · change _ ≫ 0 = _ ≫ 0
+      simp
+
+noncomputable def contract_g : contract₂ C ⟶ contract₃ C where
+  app X := ComposableArrows.homMk₂ 0 (X.map' 1 2) 0 (by change 0 ≫ _ = _; simp)
+    (by change _ = _ ≫ 0; simp)
+  naturality _ _ u := by
+    ext
+    · dsimp; simp
+    · change u.app one ≫ _ = _ ≫ u.app two; erw [u.naturality]; rfl
+    · change 0 ≫ _ = _ ≫ 0; simp
+
+variable {C} in
+lemma contract_zero (X : ComposableArrows C 2) :
+    homotopic ((contract_f C).app X ≫ (contract_g C).app X) 0 := by
+  use 0, 𝟙 _
+  dsimp
+  simp only [zero_comp, zero_add, add_zero]
+  erw [comp_id]
+  rfl
+
+noncomputable def contract : ComposableArrows C 2 ⥤ ShortComplex (Adel C) where
+  obj X := ShortComplex.mk ((quotient C).map ((contract_f C).app X)) ((quotient C).map
+    ((contract_g C).app X))
+    (by rw [← Functor.map_comp, ← (quotient C).map_zero, quotient_map_eq_iff]
+        exact contract_zero X)
+  map u := ShortComplex.homMk ((quotient C).map ((contract₁ C).map u)) ((quotient C).map
+    ((contract₂ C).map u)) ((quotient C).map ((contract₃ C).map u))
+    (by dsimp; rw [← Functor.map_comp, NatTrans.naturality, Functor.map_comp])
+    (by dsimp; rw [← Functor.map_comp, NatTrans.naturality, Functor.map_comp])
+  map_id X := by
+    ext
+    · dsimp; simp
+    · dsimp; simp
+    · dsimp; simp
+  map_comp f g := by
+    ext
+    · dsimp; simp
+    · dsimp; simp
+    · dsimp; simp
+
+noncomputable def contract_compat :
+    (functor C).mapComposableArrows 2 ⋙ contractLeft (Adel C) ≅ contract C := by
+  refine NatIso.ofComponents (fun X ↦ ?_) (fun u ↦ ?_)
+  ·
+  · sorry
+
+
+#exit
 variable (X : ComposableArrows C 2)
 
 noncomputable abbrev complex₁ : ComposableArrows C 2 :=
