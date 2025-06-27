@@ -29,6 +29,25 @@ noncomputable def functor_aux : C ⥤ ComposableArrows C 2 where
 
 noncomputable def functor : C ⥤ Adel C := functor_aux C ⋙ quotient C
 
+instance : (functor_aux_complex C).Additive where
+  map_add {_ _ _ _} := by
+    ext
+    · dsimp [functor_aux_complex]; simp
+    · dsimp [functor_aux_complex]
+    · dsimp [functor_aux_complex]; simp
+
+instance : (functor_aux C).Additive where
+  map_add {_ _ _ _} := by
+    dsimp [functor_aux]; simp
+    ext
+    · dsimp
+    · dsimp
+    · dsimp
+
+instance : (functor C).Additive where
+  map_add {_ _ _ _} := by
+    dsimp [functor]; simp
+
 variable {C} {A : Type u'} [Category.{v'} A] [Abelian A]
 
 variable (A) in
@@ -101,8 +120,6 @@ noncomputable def functor_contractLeft :
 
 noncomputable def homologyLeft : ComposableArrows A 2 ⥤ A :=
   contractLeft A ⋙ ShortComplex.homologyFunctor _
-
----def functor_homologyLeft : functor_aux A ⋙ homologyLeft A ≅ 𝟭 A := sorry
 
 instance : (homologyLeft A).Additive := by
   dsimp [homologyLeft]

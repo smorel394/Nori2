@@ -931,13 +931,17 @@ noncomputable instance : IsNormalEpiCategory (Adel C) where
 end NormalEpi
 
 section NormalMono
-/-
-TODO: use duality to prove that `Adel C` is a normal mono category.
--/
 
 variable [HasBinaryBiproducts C]
 
-noncomputable instance : IsNormalMonoCategory (Adel C) := sorry
+local instance : HasBinaryBiproducts (Cᵒᵖ) :=
+  letI : HasBinaryProducts (Cᵒᵖ) := inferInstance
+  HasBinaryBiproducts.of_hasBinaryProducts
+
+noncomputable instance : IsNormalMonoCategory (Adel C) where
+  normalMonoOfMono _ _ :=
+    Nonempty.intro (equivalenceReflectsNormalMono (duality_functor C).inv.rightOp
+    (normalMonoOfNormalEpiUnop _ inferInstance))
 
 end NormalMono
 

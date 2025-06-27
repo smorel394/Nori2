@@ -418,8 +418,6 @@ section PreservesFiniteLimits
 
 local instance : HasFiniteBiproducts A := HasFiniteBiproducts.of_hasFiniteProducts
 
-local instance : HasBinaryBiproducts (Adel A) := hasBinaryBiproducts_of_finite_biproducts _
-
 instance : PreservesFiniteColimits (homologyLeftAbelian A) :=
   (homologyLeftAbelian A).preservesFiniteColimits_of_preservesCokernels
 

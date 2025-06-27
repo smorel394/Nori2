@@ -39,15 +39,184 @@ variable [HasZeroObject C] [HasZeroObject D]
 
 noncomputable def functor_mapComposableArrows : functor_aux C ⋙ F.mapComposableArrows 2 ≅
     F ⋙ functor_aux D := by
-  refine NatIso.ofComponents (fun X ↦ ?_) ?_
-  · dsimp [functor_aux]
-    sorry
-  · sorry
+  refine NatIso.ofComponents (fun X ↦ ?_) (fun f ↦ ?_)
+  · refine ComposableArrows.isoMk₂ F.mapZeroObject (Iso.refl _) F.mapZeroObject ?_ ?_
+    · dsimp [functor_aux, functor_aux_complex]; simp
+    · dsimp [functor_aux, functor_aux_complex]; change _ = _ ≫ 0; simp
+  · ext
+    · dsimp; simp
+    · dsimp [functor_aux, functor_aux_complex]; simp
+    · dsimp; change _ ≫ 0 = 0 ≫ _; simp
 
 noncomputable def functor_functorAdel : functor C ⋙ F.functorAdel ≅ F ⋙ functor D :=
   Functor.associator _ _ _ ≪≫ isoWhiskerLeft (functor_aux C) (Quotient.lift.isLift _
   (F.mapComposableArrows 2 ⋙ Adel.quotient D) (functorAdel_aux F)) ≪≫
   (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight F.functor_mapComposableArrows (quotient D)
+
+end Compat
+
+section Compat
+
+variable [HasFiniteBiproducts C]
+
+local instance : HasBinaryBiproducts C := hasBinaryBiproducts_of_finite_biproducts _
+
+section Calculs
+
+open CandidateKer CandidateCoker
+
+variable (X : ComposableArrows C 2)
+
+noncomputable abbrev complex₁ : ComposableArrows C 2 :=
+  ComposableArrows.mk₂ (0 : 0 ⟶ X.obj zero) (X.map' 0 1 ≫ X.map' 1 2)
+
+noncomputable abbrev complex₁_kernel : complex₁ X ≅
+    candker ((functor_aux C).map (X.map' 0 1) ≫ (functor_aux C).map (X.map' 1 2)) := by
+  refine ComposableArrows.isoMk₂ ?_ ?_ ?_ ?_ ?_
+  · change 0 ≅ biprod 0 0
+    exact isoBiprodZero (isZero_zero _)
+  · change X.obj zero ≅ biprod (X.obj 0) 0
+    exact isoBiprodZero (isZero_zero _)
+  · change _ ≅ biprod 0 _
+    exact isoZeroBiprod (isZero_zero _)
+  · dsimp [functor_aux, functor_aux_complex]
+    simp
+  · simp only [NatTrans.comp_app, id_eq, isoZeroBiprod_hom, isoBiprodZero_hom]
+    change _ = _ ≫ (biprod.map _ _  + _)
+    rw [Preadditive.comp_add, biprod.inl_map]
+    erw [biprod.inl_fst_assoc]
+    change _ = 0 ≫ _ + _ ≫ _
+    rw [zero_comp, zero_add]
+    rfl
+
+lemma complex₁_candι : (complex₁_kernel X).hom ≫ candι _ ≫ (functor_aux C).map (X.map' 0 1) =
+    ComposableArrows.homMk₂ 0 (X.map' 0 1) 0 (by simp) (by change _ = _ ≫ 0; simp) := by
+  ext
+  · change _ ≫ _ ≫ 0 = 0
+    simp
+  · change biprod.inl ≫ biprod.fst ≫ _ = _
+    rw [biprod.inl_fst_assoc]
+    rfl
+  · change biprod.inr ≫ biprod.fst ≫ _ = 0
+    rw [biprod.inr_fst_assoc, zero_comp]
+
+lemma complex₁_condition : homotopic (((complex₁_kernel X).hom ≫ candι _ ≫
+    (functor_aux C).map (X.map' 0 1)) ≫ (functor_aux C).map (X.map' 1 2)) 0 := by
+  use 0, 𝟙 (X.obj two)
+  change _ = 0 ≫ 0 + _ ≫ _ + _
+  rw [zero_comp, zero_add, NatTrans.app_zero, add_zero]
+  erw [comp_id]
+  dsimp
+  erw [biprod.inl_fst_assoc]
+  rfl
+
+noncomputable abbrev complex₂ : ComposableArrows C 2 :=
+  ComposableArrows.mk₂ (0 : 0 ⟶ X.obj one) (X.map' 1 2)
+
+noncomputable abbrev complex₂_kernel : complex₂ X ≅
+    candker ((functor_aux C).map (X.map' 1 2)) := by
+  refine ComposableArrows.isoMk₂ ?_ ?_ ?_ ?_ ?_
+  · change 0 ≅ biprod 0 0
+    exact isoBiprodZero (isZero_zero _)
+  · change X.obj one ≅ biprod (X.obj one) 0
+    exact isoBiprodZero (isZero_zero _)
+  · change _ ≅ biprod 0 _
+    exact isoZeroBiprod (isZero_zero _)
+  · dsimp [functor_aux, functor_aux_complex]
+    simp
+  · simp only [NatTrans.comp_app, id_eq, isoZeroBiprod_hom, isoBiprodZero_hom]
+    change _ = _ ≫ (biprod.map _ _  + _)
+    rw [Preadditive.comp_add, biprod.inl_map]
+    erw [biprod.inl_fst_assoc]
+    change _ = 0 ≫ _ + _ ≫ _
+    rw [zero_comp, zero_add]
+    rfl
+
+noncomputable abbrev complex₁ToComplex₂ : complex₁ X ⟶ complex₂ X := by
+  refine ComposableArrows.homMk₂ 0 (X.map' 0 1) (𝟙 _) ?_ ?_
+  · dsimp; simp
+  · change (X.map' 0 1 ≫ X.map' 1 2) ≫ _ = _
+    erw [comp_id]
+    rfl
+
+lemma complex₁ToComplex₂_condition : complex₁ToComplex₂ X ≫ (complex₂_kernel X).hom
+    ≫ candι _ = (complex₁_kernel X).hom ≫ candι _ ≫ (functor_aux C).map (X.map' 0 1) := by
+  rw [complex₁_candι X]
+  ext
+  · dsimp; simp
+  · dsimp; erw [biprod.inl_fst]; rw [comp_id]
+  · dsimp
+    change (𝟙 _) ≫ biprod.inr ≫ biprod.fst = 0
+    rw [biprod.inr_fst, comp_zero]
+
+noncomputable abbrev complex₃ : ComposableArrows C 2 :=
+  ComposableArrows.mk₂ (biprod.lift (X.map' 0 1) (X.map' 0 1 ≫ X.map' 1 2))
+  (biprod.map (X.map' 1 2) (𝟙 (X.obj two)))
+
+noncomputable abbrev complex₃_cokernel : complex₃ X ≅ candcoker (complex₁ToComplex₂ X) := by
+  refine ComposableArrows.isoMk₂ ?_ (Iso.refl _) (Iso.refl _) ?_ ?_
+  · change _ ≅ biprod 0 _
+    exact isoZeroBiprod (isZero_zero _)
+  · dsimp
+    rw [Preadditive.comp_add, biprod.inr_map, comp_id, biprod.inr_snd_assoc]
+    refine biprod.hom_ext _ _ ?_ ?_
+    · dsimp
+      simp only [biprod.lift_fst, Preadditive.add_comp, assoc]
+      erw [biprod.inr_fst, biprod.inl_fst]
+      rw [comp_zero, comp_id, zero_add]
+    · dsimp
+      simp only [biprod.lift_snd, Preadditive.add_comp, assoc]
+      erw [biprod.inr_snd, biprod.inl_snd]
+      rw [comp_zero, add_zero, comp_id]
+      rfl
+  · dsimp
+    rw [comp_id, id_comp]
+    rfl
+
+
+
+#exit
+noncomputable abbrev complex₁_out : complex₁ X ⟶ (functor C).obj (X.obj one) :=
+  (quotient C).map (ComposableArrows.homMk₂ 0 (X.map' 0 1) 0 (by simp)
+  (by change _ = _ ≫ 0; simp))
+
+lemma complex₁_out_zero : complex₁_out X ≫ (functor C).map (X.map' 1 2) = 0 := by
+  dsimp [functor, complex₁_out]
+  rw [← (quotient C).map_comp, ← (quotient C).map_zero]
+  rw [quotient_map_eq_iff]
+  use 0, 𝟙 (X.obj two)
+  change _ = 0 ≫ 0 + _ ≫ _ + _
+  dsimp [functor_aux]
+  simp only [comp_zero, zero_add, add_zero]
+  erw [comp_id]
+  rfl
+
+noncomputable abbrev truc₁_X₁ (X : ComposableArrows C 2) : ((contractLeft (Adel C)).obj
+    (((functor C).mapComposableArrows 2).obj X)).X₁ ≅ complex₁ X := by
+  dsimp [contractLeft]
+  sorry
+
+noncomputable def truc₁ (X : ComposableArrows C 2) : (contractLeft (Adel C)).obj
+    (((functor C).mapComposableArrows 2).obj X) ≅
+    ShortComplex.mk (complex₁_out X) ((functor C).map (X.map' 1 2)) (complex₁_out_zero X) := by
+  refine ShortComplex.isoMk ?_ ?_ ?_ ?_ ?_
+  · refine IsZero.iso ?_ ?_
+    · dsimp [contractLeft]
+    · sorry
+
+
+end Calculs
+
+noncomputable def truc : (functor C).functorAdel ⋙ homologyLeftAbelian (Adel C) ≅ 𝟭 (Adel C) := by
+  refine Quotient.natIsoLift _ ?_
+  refine ?_ ≪≫ (Quotient.functor Adel.homotopic).rightUnitor.symm
+  refine (Functor.associator _ _ _).symm ≪≫ ?_
+  refine isoWhiskerRight (Quotient.lift.isLift _ ((functor C).mapComposableArrows 2 ⋙
+    Adel.quotient _) (functorAdel_aux (functor C))) _ ≪≫ ?_
+  refine Functor.associator _ _ _ ≪≫ ?_
+  refine isoWhiskerLeft ((functor C).mapComposableArrows 2) (Quotient.lift.isLift _ _ _) ≪≫ ?_
+  dsimp [homologyLeft]
+  sorry
 
 end Compat
 
