@@ -171,8 +171,7 @@ lemma exact : (ShortComplex.mk _ _ (homology_comp_zero u)).Exact := by
 
 section Preserves
 
-noncomputable def preservesCokernels_aux : IsColimit ((homologyLeftAbelian A).mapCocone ((Cocones.precompose
-    (compNatIso' (quotient A)).inv).obj (cocone_aux u))) := by
+noncomputable def preservesCokernels_aux : IsColimit ((homologyLeftAbelian A).mapCocone (cocone_aux u)) := by
   have := (ShortComplex.exact_and_epi_g_iff_g_is_cokernel _).mp ⟨RightExact.exact u, inferInstance⟩
   dsimp at this
   set α : parallelPair ((quotient A).map u) 0 ⋙ homologyLeftAbelian A ≅
@@ -198,12 +197,9 @@ noncomputable def preservesCokernels_aux : IsColimit ((homologyLeftAbelian A).ma
 
 def preservesCokernelsComposableArrows : PreservesColimit (parallelPair ((quotient A).map u) 0)
     (homologyLeftAbelian A) where
-  preserves hc := by
-    set e := hc.uniqueUpToIso ((IsColimit.precomposeHomEquiv (compNatIso' (quotient A)).symm
-      (cocone_aux u)).invFun (cocone_isColimit u))
-    have h : IsColimit ((homologyLeftAbelian A).mapCocone ((Cocones.precompose (compNatIso'
-      (quotient A)).inv).obj (cocone_aux u))) := preservesCokernels_aux u
-    exact Nonempty.intro (h.ofIsoColimit ((Cocones.functoriality _ (homologyLeftAbelian A)).mapIso e).symm)
+  preserves hc :=
+    Nonempty.intro ((preservesCokernels_aux u).ofIsoColimit ((Cocones.functoriality _
+    (homologyLeftAbelian A)).mapIso (hc.uniqueUpToIso (cocone_isColimit u))).symm)
 
 instance {X Y : Adel A} (u : X ⟶ Y) : PreservesColimit (parallelPair u 0) (homologyLeftAbelian A) :=
   preservesCokernels_of_preservesCokernelsComposableArrows (homologyLeftAbelian A)
@@ -214,7 +210,7 @@ end Preserves
 end RightExact
 
 /-
-The morally correct way to do would be to use opposite categories.
+The morally correct way to do this would be to use opposite categories.
 -/
 namespace LeftExact
 
@@ -366,8 +362,8 @@ lemma exact : (ShortComplex.mk _ _ (homology_comp_zero u)).Exact := by
 
 section Preserves
 
-noncomputable def preservesKernels_aux : IsLimit ((homologyRightAbelian A).mapCone ((Cones.postcompose
-    (compNatIso' (quotient A)).hom).obj (cone_aux u))) := by
+noncomputable def preservesKernels_aux :
+    IsLimit ((homologyRightAbelian A).mapCone (cone_aux u)) := by
   have := (ShortComplex.exact_and_mono_f_iff_f_is_kernel _).mp ⟨LeftExact.exact u, inferInstance⟩
   dsimp at this
   set α : parallelPair ((quotient A).map u) 0 ⋙ homologyRightAbelian A ≅
@@ -396,12 +392,9 @@ noncomputable def preservesKernels_aux : IsLimit ((homologyRightAbelian A).mapCo
 
 lemma preservesKernelsComposableArrows :
     PreservesLimit (parallelPair ((quotient A).map u) 0) (homologyRightAbelian A) where
-  preserves hc := by
-    set e := hc.uniqueUpToIso ((IsLimit.postcomposeHomEquiv (compNatIso' (quotient A))
-      (cone_aux u)).invFun (cone_isLimit u))
-    have h : IsLimit ((homologyRightAbelian A).mapCone ((Cones.postcompose (compNatIso'
-      (quotient A)).hom).obj (cone_aux u))) := preservesKernels_aux u
-    exact Nonempty.intro (h.ofIsoLimit ((Cones.functoriality _ (homologyRightAbelian A)).mapIso e).symm)
+  preserves hc :=
+    Nonempty.intro ((preservesKernels_aux u).ofIsoLimit ((Cones.functoriality _
+    (homologyRightAbelian A)).mapIso (hc.uniqueUpToIso (cone_isLimit u))).symm)
 
 instance {X Y : Adel A} (u : X ⟶ Y) : PreservesLimit (parallelPair u 0) (homologyRightAbelian A) :=
   preservesKernels_of_preservesKernelsComposableArrows (homologyRightAbelian A)

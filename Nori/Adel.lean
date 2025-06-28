@@ -366,9 +366,8 @@ end CandidateCoker
 open CandidateCoker
 
 noncomputable def cocone_aux {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
-    Cocone (parallelPair u' 0 ⋙ quotient C) := by
-  refine (Cocones.precompose (diagramIsoParallelPair (parallelPair u' 0 ⋙ quotient C)).hom).obj
-    (Cofork.ofπ ((quotient C).map (candπ u')) ?_)
+    Cocone (parallelPair ((quotient C).map u') 0) := by
+  refine Cofork.ofπ ((quotient C).map (candπ u')) ?_
   suffices eq : (quotient C).map (u' ≫ (candπ u')) = (quotient C).map 0 by
     dsimp at eq ⊢
     simp only [map_comp, map_preimage, Category.assoc, Functor.map_zero,
@@ -377,23 +376,16 @@ noncomputable def cocone_aux {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
   exact (quotient_map_eq_iff _ _).mpr (candcondition u')
 
 noncomputable abbrev π' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
-    (c : Cocone (parallelPair u' 0 ⋙ quotient C)) : Y' ⟶ (quotient C).objPreimage c.pt :=
+    (c : Cocone (parallelPair ((quotient C).map u') 0)) : Y' ⟶ (quotient C).objPreimage c.pt :=
   (quotient C).preimage (c.ι.app WalkingParallelPair.one ≫
   ((quotient C).objObjPreimageIso c.pt).inv)
 
 omit [HasBinaryBiproducts C] in
 lemma condition' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
-    (c : Cocone (parallelPair u' 0 ⋙ quotient C)) : homotopic (u' ≫ π' u' c) 0 := by
+    (c : Cocone (parallelPair ((quotient C).map u') 0)) : homotopic (u' ≫ π' u' c) 0 := by
   rw [← quotient_map_eq_iff]
   dsimp [π']
   rw [map_comp,Functor.map_preimage, ← cancel_mono ((quotient C).objObjPreimageIso c.pt).hom]
-  simp only [Nat.reduceAdd, assoc, Iso.inv_hom_id, comp_id, Functor.map_zero, zero_comp]
-  have := c.w WalkingParallelPairHom.left
-  dsimp at this
-  rw [this]
-  have := c.w WalkingParallelPairHom.right
-  dsimp at this
-  rw [← this]
   simp
 
 noncomputable def cocone_isColimit {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
@@ -402,33 +394,22 @@ noncomputable def cocone_isColimit {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y
     ((quotient C).objObjPreimageIso c.pt).hom
   fac c j := by
     match j with
-    | WalkingParallelPair.zero =>
-      have eq := c.w WalkingParallelPairHom.right
-      have eq' := (cocone_aux u').w WalkingParallelPairHom.right
-      dsimp at eq eq'
-      rw [← eq, ← eq']
-      dsimp
-      simp
+    | WalkingParallelPair.zero => dsimp; simp
     | WalkingParallelPair.one =>
-      have := candfac u' (π' u' c) (condition' u' c)
       dsimp [cocone_aux]
-      simp only [Fin.isValue, homOfLE_leOfHom, id_comp]
-      rw [← assoc, ← (quotient C).map_comp, this]
+      rw [← assoc, ← (quotient C).map_comp, candfac u' (π' u' c) (condition' u' c)]
       dsimp [π']
       rw [(quotient C).map_preimage]
       simp
   uniq c m hm := by
     rw [← cancel_epi ((quotient C).map (candπ u'))]
-    have := hm WalkingParallelPair.one
-    dsimp [cocone_aux] at this
-    simp only [Fin.isValue, homOfLE_leOfHom, id_comp] at this
-    rw [this, ← assoc, ← (quotient C).map_comp, candfac u' (π' u' c) (condition' u' c)]
-    dsimp [π']
-    rw [(quotient C).map_preimage]
-    simp
+    rw [← assoc, ← (quotient C).map_comp, candfac u' (π' u' c) (condition' u' c)]
+    dsimp
+    simp only [map_preimage, const_obj_obj, Cofork.app_one_eq_π, assoc, Iso.inv_hom_id, comp_id]
+    exact hm WalkingParallelPair.one
 
 instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
-    HasColimit (parallelPair u' 0 ⋙ quotient C) :=
+    HasColimit (parallelPair ((quotient C).map u') 0) :=
   HasColimit.mk {cocone := cocone_aux u', isColimit := cocone_isColimit u'}
 
 noncomputable instance {X Y : Adel C} (u : X ⟶ Y) : HasColimit (parallelPair u 0) := by
@@ -436,17 +417,16 @@ noncomputable instance {X Y : Adel C} (u : X ⟶ Y) : HasColimit (parallelPair u
   set Y' := (quotient C).objPreimage Y
   set u' := (quotient C).preimage (((quotient C).objObjPreimageIso X).hom ≫ u ≫
     ((quotient C).objObjPreimageIso Y).inv)
-  set g : WalkingParallelPair ⥤ ComposableArrows C 2 := parallelPair u' 0
-  set ι : g ⋙ quotient C ≅ parallelPair u 0 := by
+  set α : parallelPair ((quotient C).map u') 0 ≅ parallelPair u 0 := by
     refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
     · match j with
       | .zero => exact (quotient C).objObjPreimageIso X
       | .one => exact (quotient C).objObjPreimageIso Y
     · match u with
       | .id _ => dsimp; simp
-      | .left => dsimp [g]; rw [(quotient C).map_preimage]; simp
-      | .right => dsimp [g]; simp
-  rw [← hasColimit_iff_of_iso ι]
+      | .left => dsimp; rw [(quotient C).map_preimage]; simp
+      | .right => dsimp; simp
+  rw [← hasColimit_iff_of_iso α]
   infer_instance
 
 instance : HasCokernels (Adel C) where
@@ -539,16 +519,6 @@ end CandidateKer
 open CandidateKer
 
 noncomputable def cone_aux {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
-    Cone (parallelPair u' 0 ⋙ quotient C) := by
-  refine (Cones.postcompose (diagramIsoParallelPair (parallelPair u' 0 ⋙ quotient C)).inv).obj
-    (Fork.ofι ((quotient C).map (candι u')) ?_)
-  suffices eq : (quotient C).map (candι u' ≫ u') = (quotient C).map 0 by
-    dsimp at eq ⊢
-    simp only [Fin.isValue, homOfLE_leOfHom, map_comp, Functor.map_zero, comp_zero] at eq ⊢
-    exact eq
-  exact (quotient_map_eq_iff _ _).mpr (candcondition u')
-
-noncomputable def cone_aux' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
     Cone (parallelPair ((quotient C).map u') 0) := by
   refine Fork.ofι ((quotient C).map (candι u')) ?_
   suffices eq : (quotient C).map (candι u' ≫ u') = (quotient C).map 0 by
@@ -558,43 +528,17 @@ noncomputable def cone_aux' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
   exact (quotient_map_eq_iff _ _).mpr (candcondition u')
 
 noncomputable abbrev ι' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
-    (c : Cone (parallelPair u' 0 ⋙ quotient C)) : (quotient C).objPreimage c.pt ⟶ X' :=
-  (quotient C).preimage (((quotient C).objObjPreimageIso c.pt).hom ≫
-  c.π.app WalkingParallelPair.zero)
-
-noncomputable abbrev ι'' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
     (c : Cone (parallelPair ((quotient C).map u') 0)) : (quotient C).objPreimage c.pt ⟶ X' :=
   (quotient C).preimage (((quotient C).objObjPreimageIso c.pt).hom ≫
   c.π.app WalkingParallelPair.zero)
 
 omit [HasBinaryBiproducts C] in
 lemma conditionk' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
-    (c : Cone (parallelPair u' 0 ⋙ quotient C)) : homotopic (ι' u' c ≫ u') 0 := by
+    (c : Cone (parallelPair ((quotient C).map u') 0)) : homotopic (ι' u' c ≫ u') 0 := by
   rw [← quotient_map_eq_iff]
   dsimp [ι']
   rw [map_comp,Functor.map_preimage, ← cancel_epi ((quotient C).objObjPreimageIso c.pt).inv]
-  simp only [Nat.reduceAdd, assoc, Iso.inv_hom_id_assoc, Functor.map_zero, comp_zero]
-  have := c.w WalkingParallelPairHom.left
-  dsimp at this
-  rw [this]
-  have := c.w WalkingParallelPairHom.right
-  dsimp at this
-  rw [← this]
   simp
-
-omit [HasBinaryBiproducts C] in
-lemma conditionk'' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y')
-    (c : Cone (parallelPair ((quotient C).map u') 0)) : homotopic (ι'' u' c ≫ u') 0 := by
-  rw [← quotient_map_eq_iff]
-  dsimp [ι']
-  rw [map_comp,Functor.map_preimage, ← cancel_epi ((quotient C).objObjPreimageIso c.pt).inv]
-  simp only [Nat.reduceAdd, assoc, Iso.inv_hom_id_assoc, Functor.map_zero, comp_zero]
-  dsimp
-  have := c.w WalkingParallelPairHom.left
-  dsimp at this
-  rw [this]
-  simp
--- TODO: rewrite this proof, it's too complicated
 
 noncomputable def cone_isLimit {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
     IsLimit (cone_aux u') where
@@ -603,74 +547,22 @@ noncomputable def cone_isLimit {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
   fac c j := by
     match j with
     | WalkingParallelPair.zero =>
-      have := candfac u' (ι' u' c) (conditionk' u' c)
       dsimp [cone_aux]
-      simp only [Fin.isValue, homOfLE_leOfHom, comp_id, assoc]
-      rw [← (quotient C).map_comp, this]
+      rw [assoc, ← (quotient C).map_comp, candfac u' (ι' u' c) (conditionk' u' c)]
       dsimp [ι']
-      rw [(quotient C).map_preimage]
       simp
-    | WalkingParallelPair.one =>
-      have eq := c.w WalkingParallelPairHom.right
-      have eq' := (cone_aux u').w WalkingParallelPairHom.left
-      dsimp at eq eq'
-      rw [← eq, ← eq']
-      dsimp [cone_aux]
-      simp only [Fin.isValue, homOfLE_leOfHom, comp_id, assoc, Functor.map_zero, comp_zero,
-        Preadditive.IsIso.comp_left_eq_zero]
-      rw [← map_comp, (quotient_map_eq_iff _ _).mpr (candcondition u')]
-      simp
+    | WalkingParallelPair.one => simp
   uniq c m hm := by
-    rw [← cancel_mono ((quotient C).map (candι u'))]
-    have := hm WalkingParallelPair.zero
-    dsimp [cone_aux] at this
-    simp only [Fin.isValue, homOfLE_leOfHom, comp_id] at this
-    rw [this, assoc, ← (quotient C).map_comp, candfac u' (ι' u' c) (conditionk' u' c)]
+    rw [← cancel_mono ((quotient C).map (candι u')), assoc,
+      ← (quotient C).map_comp, candfac u' (ι' u' c) (conditionk' u' c)]
     dsimp [ι']
     rw [(quotient C).map_preimage]
-    simp
-
-noncomputable def cone_isLimit' {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
-    IsLimit (cone_aux' u') where
-  lift c := ((quotient C).objObjPreimageIso c.pt).inv ≫
-    (quotient C).map (candlift u' (ι'' u' c) (conditionk'' u' c))
-  fac c j := by
-    match j with
-    | WalkingParallelPair.zero =>
-      have := candfac u' (ι'' u' c) (conditionk'' u' c)
-      dsimp [cone_aux']
-      simp only [Fin.isValue, homOfLE_leOfHom, comp_id, assoc]
-      rw [← (quotient C).map_comp, this]
-      dsimp [ι'']
-      rw [(quotient C).map_preimage]
-      simp
-    | WalkingParallelPair.one =>
-      have eq := c.w WalkingParallelPairHom.right
-      have eq' := (cone_aux' u').w WalkingParallelPairHom.left
-      dsimp at eq eq'
-      rw [← eq, ← eq']
-      dsimp [cone_aux']
-      simp only [Fin.isValue, homOfLE_leOfHom, comp_id, assoc, Functor.map_zero, comp_zero,
-        Preadditive.IsIso.comp_left_eq_zero]
-      rw [← map_comp, (quotient_map_eq_iff _ _).mpr (candcondition u')]
-      simp
-  uniq c m hm := by
-    rw [← cancel_mono ((quotient C).map (candι u'))]
-    have := hm WalkingParallelPair.zero
-    dsimp [cone_aux'] at this
-    rw [this, assoc, ← (quotient C).map_comp, candfac u' (ι'' u' c) (conditionk'' u' c)]
-    dsimp [ι'']
-    rw [(quotient C).map_preimage]
+    convert hm WalkingParallelPair.zero
     simp
 
 instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
-    HasLimit (parallelPair u' 0 ⋙ quotient C) :=
+    HasLimit (parallelPair ((quotient C).map u') 0) :=
   HasLimit.mk {cone := cone_aux u', isLimit := cone_isLimit u'}
-
--- refactor neeed to get rid of the `parallelPair u' 0 ⋙ quotient C`
--- (for cokernels too!)
-instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
-    HasLimit (parallelPair ((quotient C).map u') 0) := sorry
 
 noncomputable instance {X Y : Adel C} (u : X ⟶ Y) : HasLimit (parallelPair u 0) := by
   set X' := (quotient C).objPreimage X
@@ -686,17 +578,7 @@ noncomputable instance {X Y : Adel C} (u : X ⟶ Y) : HasLimit (parallelPair u 0
       | .id _ => dsimp; simp
       | .left => dsimp; rw [(quotient C).map_preimage]; simp
       | .right => dsimp; simp
-  set g : WalkingParallelPair ⥤ ComposableArrows C 2 := parallelPair u' 0
-  set ι : g ⋙ quotient C ≅ parallelPair u 0 := by
-    refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
-    · match j with
-      | .zero => exact (quotient C).objObjPreimageIso X
-      | .one => exact (quotient C).objObjPreimageIso Y
-    · match u with
-      | .id _ => dsimp; simp
-      | .left => dsimp [g]; rw [(quotient C).map_preimage]; simp
-      | .right => dsimp [g]; simp
-  rw [← hasLimit_iff_of_iso ι]
+  rw [← hasLimit_iff_of_iso α]
   infer_instance
 
 instance : HasKernels (Adel C) where
@@ -892,42 +774,29 @@ lemma compat {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).
 
 lemma compat₁ {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
     (quotient C).map (connecting u') ≫ (cocone_isColimit (candι u')).desc
-    ((Cocones.precompose (isoCocone u').hom).obj ((CokernelCofork.ofπ ((quotient C).map u')
-    (cand_comp u')))) = 𝟙 _ := by
-  rw [← cancel_epi ((quotient C).map u')]
+    ((CokernelCofork.ofπ ((quotient C).map u') (cand_comp u'))) = 𝟙 _ := by
+  rw [← cancel_epi ((quotient C).map u'), comp_id]
   have eq : (quotient C).map u' ≫ (quotient C).map (connecting u') =
       (quotient C).map (candπ (candι u')) := by
     rw [← (quotient C).map_comp, quotient_map_eq_iff]
     exact compat u'
   slice_lhs 1 2 => rw [eq]
-  have := (cocone_isColimit (candι u')).fac ((Cocones.precompose (isoCocone u').hom).obj
-    (CokernelCofork.ofπ ((quotient C).map u') (cand_comp u'))) WalkingParallelPair.one
-  dsimp [cocone_aux] at this
-  change _ = 𝟙 _ ≫ _ at this
-  simp only [id_comp] at this
-  conv_rhs => congr; rw [← this]
-  dsimp
-  simp
+  exact (cocone_isColimit (candι u')).fac (CokernelCofork.ofπ ((quotient C).map u')
+    (cand_comp u')) WalkingParallelPair.one
 
 lemma compat₂ {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((quotient C).map u')] :
-    (cocone_isColimit (candι u')).desc ((Cocones.precompose (isoCocone u').hom).obj
-    ((CokernelCofork.ofπ ((quotient C).map u') (cand_comp u')))) ≫
-    (quotient C).map (connecting u') = 𝟙 _ := by
-  have : IsColimit ((Cocones.precompose (isoCocone u').inv).obj (cocone_aux (candι u'))) :=
-    (IsColimit.precomposeInvEquiv _ _).invFun (cocone_isColimit (candι u'))
-  have : Epi ((quotient C).map (candπ (candι u'))) := by
-    have : Epi (𝟙 _ ≫ 𝟙 _ ≫ (quotient C).map (candπ (candι u'))) := epi_of_isColimit_cofork this
-    have : Epi (𝟙 _ ≫ (quotient C).map (candπ (candι u'))) := epi_of_epi (𝟙 _) _
-    exact epi_of_epi (𝟙 _) _
+    (cocone_isColimit (candι u')).desc (CokernelCofork.ofπ ((quotient C).map u')
+    (cand_comp u')) ≫ (quotient C).map (connecting u') = 𝟙 _ := by
+  have : IsColimit (cocone_aux (candι u')) := cocone_isColimit (candι u')
+  have : Epi ((quotient C).map (candπ (candι u'))) :=
+    epi_of_isColimit_cofork (cocone_isColimit (candι u'))
   rw [← cancel_epi ((quotient C).map (candπ (candι u')))]
-  have := (cocone_isColimit (candι u')).fac ((Cocones.precompose (isoCocone u').hom).obj
-    ((CokernelCofork.ofπ ((quotient C).map u') (cand_comp u')))) WalkingParallelPair.one
-  change (𝟙 _ ≫ (quotient C).map (candπ (candι u'))) ≫ _ = _ at this
-  rw [id_comp] at this
+  erw [comp_id]
+  have := (cocone_isColimit (candι u')).fac (CokernelCofork.ofπ ((quotient C).map u')
+    (cand_comp u')) WalkingParallelPair.one
+  change ((quotient C).map (candπ (candι u'))) ≫ _ = _ at this
   rw [← assoc, this]
-  change (𝟙 _ ≫ (quotient C).map _) ≫ _ = _
-  rw [id_comp]
-  conv_rhs => erw [comp_id]
+  dsimp
   rw [← (quotient C).map_comp, quotient_map_eq_iff]
   exact compat u'
 
@@ -939,11 +808,9 @@ noncomputable instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((qu
   isColimit := by
     set c : Cofork ((quotient C).map (candι u')) 0 := (CokernelCofork.ofπ ((quotient C).map u')
       (cand_comp u'))
-    set ι : parallelPair (candι u') 0 ⋙ quotient C ≅
-      parallelPair ((quotient C).map (candι u')) 0 := isoCocone u'
-    set e : (Cocones.precompose ι.inv).obj (cocone_aux (candι u')) ≅ c := by
+    set e : cocone_aux (candι u') ≅ c := by
       refine Cocones.ext ?_ (fun j ↦ ?_)
-      · exact {hom := (cocone_isColimit (candι u')).desc ((Cocones.precompose ι.hom).obj c),
+      · exact {hom := (cocone_isColimit (candι u')).desc c,
                inv := (quotient C).map (connecting u'),
                hom_inv_id := compat₂ u',
                inv_hom_id := compat₁ u'}
@@ -954,18 +821,8 @@ noncomputable instance {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') [Epi ((qu
           have eq' := (cocone_aux (candι u')).w WalkingParallelPairHom.right
           rw [← eq, ← eq']
           simp
-        | WalkingParallelPair.one =>
-          dsimp
-          change (𝟙 _ ≫ (𝟙 _ ≫ (quotient C).map (candπ (candι u')))) ≫ _ = (quotient C).map u'
-          dsimp
-          simp only [Fin.isValue, homOfLE_leOfHom, Category.id_comp]
-          have := (cocone_isColimit (candι u')).fac ((Cocones.precompose ι.hom).obj c)
-            WalkingParallelPair.one
-          change (𝟙 _ ≫ (quotient C).map (candπ (candι u'))) ≫ _ = 𝟙 _ ≫ _ at this
-          dsimp at this
-          simp only [Fin.isValue, homOfLE_leOfHom, Category.id_comp] at this
-          exact this
-    exact IsColimit.equivOfNatIsoOfIso ι _ _ e (cocone_isColimit (candι u'))
+        | WalkingParallelPair.one => dsimp; simp
+    exact IsColimit.ofIsoColimit (cocone_isColimit (candι u')) e
 
 noncomputable instance {X Y : Adel C} (u : X ⟶ Y) [Epi u] : NormalEpi u := by
   set e := (quotient _).objObjPreimageIso X

@@ -197,12 +197,10 @@ noncomputable def contract : ComposableArrows C 2 ⥤ ShortComplex (Adel C) wher
 noncomputable def contract_compat :
     (functor C).mapComposableArrows 2 ⋙ contractLeft (Adel C) ≅ contract C := by
   refine NatIso.ofComponents (fun X ↦ ?_) (fun u ↦ ?_)
-  ·
+  · sorry
   · sorry
 
-
-#exit
-variable (X : ComposableArrows C 2)
+/-variable (X : ComposableArrows C 2)
 
 noncomputable abbrev complex₁ : ComposableArrows C 2 :=
   ComposableArrows.mk₂ (0 : 0 ⟶ X.obj zero) (X.map' 0 1 ≫ X.map' 1 2)
@@ -309,11 +307,10 @@ noncomputable abbrev complex₃_cokernel : complex₃ X ≅ candcoker (complex�
   · dsimp
     rw [comp_id, id_comp]
     rfl
+-/
 
 
-
-#exit
-noncomputable abbrev complex₁_out : complex₁ X ⟶ (functor C).obj (X.obj one) :=
+/-noncomputable abbrev complex₁_out : complex₁ X ⟶ (functor C).obj (X.obj one) :=
   (quotient C).map (ComposableArrows.homMk₂ 0 (X.map' 0 1) 0 (by simp)
   (by change _ = _ ≫ 0; simp))
 
@@ -340,7 +337,7 @@ noncomputable def truc₁ (X : ComposableArrows C 2) : (contractLeft (Adel C)).o
   · refine IsZero.iso ?_ ?_
     · dsimp [contractLeft]
     · sorry
-
+-/
 
 end Calculs
 
@@ -412,10 +409,9 @@ noncomputable def candcoker_map_iso : candcoker ((F.mapComposableArrows 2).map u
       simp
 
 noncomputable def preservesCokernelsComposableArrows_aux :
-    IsColimit (F.functorAdel.mapCocone ((Cocones.precompose
-    (compNatIso' (quotient C)).inv).obj (cocone_aux u))) := by
+    IsColimit (F.functorAdel.mapCocone (cocone_aux u)) := by
   set α : parallelPair ((quotient C).map u) 0 ⋙ F.functorAdel ≅
-      parallelPair ((F.mapComposableArrows 2).map u) 0 ⋙ quotient D := by
+      parallelPair ((quotient D).map ((F.mapComposableArrows 2).map u)) 0 := by
     refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
     · match j with
       | .zero => exact Iso.refl _
@@ -428,8 +424,7 @@ noncomputable def preservesCokernelsComposableArrows_aux :
         rfl
       | .right => dsimp; simp
   set e : (Cocones.precompose α.hom).obj (cocone_aux ((F.mapComposableArrows 2).map u)) ≅
-      (F.functorAdel.mapCocone ((Cocones.precompose (compNatIso' (quotient C)).inv).obj
-      (cocone_aux u))) := by
+      (F.functorAdel.mapCocone (cocone_aux u)) := by
     refine Cocones.ext ?_ (fun j ↦ ?_)
     · dsimp
       change (quotient D).obj _ ≅ F.functorAdel.obj ((quotient C).obj _)
@@ -463,12 +458,9 @@ noncomputable def preservesCokernelsComposableArrows_aux :
 
 def preservesCokernelsComposableArrows : PreservesColimit (parallelPair ((quotient C).map u) 0)
     F.functorAdel where
-  preserves {c} hc := by
-    set e := hc.uniqueUpToIso ((IsColimit.precomposeHomEquiv (compNatIso' (quotient C)).symm
-      (cocone_aux u)).invFun (cocone_isColimit u))
-    have h : IsColimit (F.functorAdel.mapCocone ((Cocones.precompose (compNatIso'
-      (quotient C)).inv).obj (cocone_aux u))) := preservesCokernelsComposableArrows_aux F u
-    exact Nonempty.intro (h.ofIsoColimit ((Cocones.functoriality _ F.functorAdel).mapIso e).symm)
+  preserves hc :=
+    Nonempty.intro ((preservesCokernelsComposableArrows_aux F u).ofIsoColimit
+    ((Cocones.functoriality _ F.functorAdel).mapIso (hc.uniqueUpToIso (cocone_isColimit u))).symm)
 
 instance {X Y : Adel C} (u : X ⟶ Y) : PreservesColimit (parallelPair u 0) F.functorAdel :=
   preservesCokernels_of_preservesCokernelsComposableArrows F.functorAdel
@@ -519,10 +511,9 @@ noncomputable def candker_map_iso : candker ((F.mapComposableArrows 2).map u) �
       simp
 
 noncomputable def preservesKernelsComposableArrows_aux :
-    IsLimit (F.functorAdel.mapCone ((Cones.postcompose
-    (compNatIso' (quotient C)).hom).obj (cone_aux u))) := by
+    IsLimit (F.functorAdel.mapCone (cone_aux u)) := by
   set α : parallelPair ((quotient C).map u) 0 ⋙ F.functorAdel ≅
-      parallelPair ((F.mapComposableArrows 2).map u) 0 ⋙ quotient D := by
+      parallelPair ((quotient D).map ((F.mapComposableArrows 2).map u)) 0 := by
     refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
     · match j with
       | .zero => exact Iso.refl _
@@ -535,8 +526,7 @@ noncomputable def preservesKernelsComposableArrows_aux :
         rfl
       | .right => dsimp; simp
   set e : (Cones.postcompose α.inv).obj (cone_aux ((F.mapComposableArrows 2).map u)) ≅
-      (F.functorAdel.mapCone ((Cones.postcompose (compNatIso' (quotient C)).hom).obj
-      (cone_aux u))) := by
+      (F.functorAdel.mapCone (cone_aux u)) := by
     refine Cones.ext ?_ (fun j ↦ ?_)
     · dsimp
       change (quotient D).obj _ ≅ F.functorAdel.obj ((quotient C).obj _)
@@ -550,36 +540,25 @@ noncomputable def preservesKernelsComposableArrows_aux :
         change (quotient D).map _ = _
         congr 1
         ext
-        · dsimp
-          simp only [comp_id]
-          erw [comp_id]
-          rw [← cancel_epi (F.mapBiprod _ _).hom]
-          simp only [biprod.uniqueUpToIso_hom, mapBinaryBicone_pt, mapBinaryBicone_fst,
-            BinaryBiproduct.bicone_fst, mapBinaryBicone_snd, BinaryBiproduct.bicone_snd,
-            biprod.lift_fst, biprod.lift_desc_assoc, Preadditive.add_comp, assoc]
-          rw [← F.map_comp, ← F.map_comp, biprod.inl_fst, comp_id, ← F.map_comp, ← F.map_comp]
-          erw [biprod.inr_fst]
-          simp
-        · dsimp
-          simp only [comp_id]
-          rw [← cancel_epi (F.mapBiprod _ _).hom]
-          simp only [biprod.uniqueUpToIso_hom,
-            mapBinaryBicone_pt, mapBinaryBicone_fst, BinaryBiproduct.bicone_fst,
-            mapBinaryBicone_snd, BinaryBiproduct.bicone_snd, biprod.lift_fst_assoc,
-            biprod.lift_desc_assoc, Preadditive.add_comp, assoc]
+        · rw [← cancel_epi (F.mapBiprod _ _).hom]
+          dsimp
+          simp only [biprod.lift_fst_assoc, biprod.lift_desc_assoc, Preadditive.add_comp, assoc]
           rw [← F.map_comp, ← F.map_comp, biprod.inl_fst, ← F.map_comp, ← F.map_comp]
-          erw [biprod.lift_fst_assoc, biprod.inr_fst, comp_id]
+          erw [biprod.inr_fst, comp_id, comp_id]
           simp
-        · dsimp
-          simp only [comp_id]
-          erw [comp_id, ComposableArrows.homMk₂_app_two, ComposableArrows.homMk₂_app_two]
-          rw [← cancel_epi (F.mapBiprod _ _).hom]
-          simp only [mapComposableArrows_obj_obj, biprod.uniqueUpToIso_hom, mapBinaryBicone_pt,
-            mapBinaryBicone_fst, BinaryBiproduct.bicone_fst, mapBinaryBicone_snd,
-            BinaryBiproduct.bicone_snd, biprod.lift_fst, biprod.lift_desc_assoc,
-            Preadditive.add_comp, assoc]
-          rw [← F.map_comp, ← F.map_comp, ← F.map_comp]
-          erw [biprod.inl_fst, biprod.inr_fst]
+        · rw [← cancel_epi (F.mapBiprod _ _).hom]
+          dsimp
+          simp only [biprod.lift_fst_assoc, biprod.lift_desc_assoc, Preadditive.add_comp, assoc]
+          rw [← F.map_comp, ← F.map_comp, biprod.inl_fst, ← F.map_comp, ← F.map_comp]
+          erw [comp_id, comp_id, biprod.inr_fst]
+          simp
+        · rw [← cancel_epi (F.mapBiprod _ _).hom]
+          dsimp [candι]
+          erw [comp_id, ComposableArrows.homMk₂_app_two, ComposableArrows.homMk₂_app_two,
+            ComposableArrows.homMk₂_app_two, biprod.lift_fst]
+          rw [biprod.lift_desc_assoc, ← F.map_comp, ← F.map_comp, Preadditive.add_comp,
+            ← F.map_comp, ← F.map_comp, assoc, assoc, biprod.inl_fst, comp_id]
+          erw [biprod.inr_fst]
           simp
       | .one =>
         dsimp [α]
@@ -594,12 +573,9 @@ noncomputable def preservesKernelsComposableArrows_aux :
 
 def preservesKernelsComposableArrows : PreservesLimit (parallelPair ((quotient C).map u) 0)
     F.functorAdel where
-  preserves {c} hc := by
-    set e := hc.uniqueUpToIso ((IsLimit.postcomposeHomEquiv (compNatIso' (quotient C))
-      (cone_aux u)).invFun (cone_isLimit u))
-    have h : IsLimit (F.functorAdel.mapCone ((Cones.postcompose (compNatIso'
-      (quotient C)).hom).obj (cone_aux u))) := preservesKernelsComposableArrows_aux F u
-    exact Nonempty.intro (h.ofIsoLimit ((Cones.functoriality _ F.functorAdel).mapIso e).symm)
+  preserves hc :=
+    Nonempty.intro ((preservesKernelsComposableArrows_aux F u).ofIsoLimit ((Cones.functoriality _
+    F.functorAdel).mapIso (hc.uniqueUpToIso (cone_isLimit u))).symm)
 
 instance {X Y : CategoryTheory.Adel C} (u : X ⟶ Y) : PreservesLimit (parallelPair u 0) F.functorAdel :=
   preservesKernels_of_preservesKernelsComposableArrows F.functorAdel
