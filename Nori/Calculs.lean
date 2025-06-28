@@ -338,13 +338,20 @@ lemma cycles_iso_cycles_i (X : ComposableArrows C 2) :
     ((contract C).obj X).cyclesIsKernel WalkingParallelPair.zero]
   rfl
 
-lemma to_cycles_iso_cycles_i (X : ComposableArrows C 2) :
+lemma to_cycles_iso_cycles_hom (X : ComposableArrows C 2) :
     (quotient C).map ((tocycles C).app X) ≫ (cycles_iso_cycles C).hom.app X =
     ((contract C).obj X).toCycles := by
   rw [← cancel_mono ((contract C).obj X).iCycles, assoc, cycles_iso_cycles_i,
     ShortComplex.toCycles_i]
   rw [← (quotient C).map_comp, ← NatTrans.comp_app, tocycles_i]
   rfl
+
+lemma to_cycles_iso_cycles_inv (X : ComposableArrows C 2) :
+    ((contract C).obj X).toCycles ≫ (cycles_iso_cycles C).inv.app X =
+    (quotient C).map ((tocycles C).app X) := by
+  rw [← cancel_mono ((cycles_iso_cycles C).hom.app X), assoc, Iso.inv_hom_id_app,
+    to_cycles_iso_cycles_hom]
+  erw [comp_id]
 
 variable (C)
 
@@ -464,13 +471,10 @@ lemma π_homology_iso_candker (X : ComposableArrows C 2) :
     rfl
 
 noncomputable def homology_cocone (X : ComposableArrows C 2) :
-    CokernelCofork ((quotient C).map ((tocycles C).app X)) := by
-  refine Cofork.ofπ ((quotient C).map ((homologyπ C).app X)) ?_
-  suffices eq : (quotient C).map ((tocycles C).app X) ≫ _ = (quotient C).map 0 by
-    dsimp at eq ⊢
-    simp only [Functor.map_zero, zero_comp] at eq ⊢
-    exact eq
-  rw [← (quotient C).map_comp, quotient_map_eq_iff]
+    CokernelCofork ((contract C).obj X).toCycles := by
+  refine Cofork.ofπ ((cycles_iso_cycles C).inv.app X ≫ (quotient C).map ((homologyπ C).app X)) ?_
+  rw [zero_comp, ← assoc, to_cycles_iso_cycles_inv, ← (quotient C).map_comp,
+    ← (quotient C).map_zero, quotient_map_eq_iff]
   use 𝟙 _, -biprod.inr
   dsimp [tocycles, homologyπ, contract₁, homology]
   simp only [id_comp, Preadditive.comp_neg, add_zero]
@@ -485,53 +489,65 @@ noncomputable def homology_cocone (X : ComposableArrows C 2) :
 
 noncomputable def homology_isCokernel (X : ComposableArrows C 2) :
     IsColimit (homology_cocone X) := by
+  set α : parallelPair ((quotient C).map ((tocycles C).app X)) 0 ≅
+      parallelPair ((contract C).obj X).toCycles 0 := by
+    refine NatIso.ofComponents (fun j ↦ ?_) (fun u ↦ ?_)
+    · match j with
+      | .zero => exact Iso.refl _
+      | .one => exact (cycles_iso_cycles C).app X
+    · match u with
+      | .id _ => dsimp; simp
+      | .left => dsimp; rw [to_cycles_iso_cycles_hom, id_comp]
+      | .right => dsimp; simp
+  refine (IsColimit.precomposeHomEquiv α _ ).toFun ?_
   refine (cocone_isColimit _).ofIsoColimit ?_
   refine Cofork.ext ((quotient C).mapIso (homology_iso_candcoker X)).symm ?_
   rw [← cancel_mono ((quotient C).mapIso (homology_iso_candcoker X)).symm.inv,
     assoc, Iso.hom_inv_id, comp_id]
-  change (quotient C).map _ = (quotient C).map _ ≫ (quotient C).map _
-  rw [← (quotient C).map_comp, π_homology_iso_candker X]
+  change _ = (Cocone.ι _).app WalkingParallelPair.one ≫ _
+  dsimp [α, homology_cocone]
+  rw [Iso.hom_inv_id_app_assoc, ← (quotient C).map_comp, π_homology_iso_candker]
+  rfl
 
 variable (C) in
 noncomputable def homology_iso_homology :
-    homology C ⋙ quotient C ≅ contract C ⋙ ShortComplex.homologyFunctor (Adel C) := by
+    contract C ⋙ ShortComplex.homologyFunctor (Adel C) ≅ homology C ⋙ quotient C := by
   refine NatIso.ofComponents (fun X ↦ ?_) (fun {X Y} u ↦ ?_)
-  · have := ((contract C).obj X).homologyIsCokernel
-    exact (homology_isCokernel X).coconePointUniqueUpToIso ((contract C).obj X).homologyIsCokernel
+  · exact ((contract C).obj X).homologyIsCokernel.coconePointUniqueUpToIso (homology_isCokernel X)
   · dsimp
-    rw [← cancel_mono ((contract C).obj Y).iCycles, assoc, assoc, ShortComplex.cyclesMap_i]
-    erw [IsLimit.conePointUniqueUpToIso_hom_comp_assoc (cycles_isKernel X)
-      ((contract C).obj X).cyclesIsKernel WalkingParallelPair.zero,
-      IsLimit.conePointUniqueUpToIso_hom_comp (cycles_isKernel Y)
-      ((contract C).obj Y).cyclesIsKernel WalkingParallelPair.zero]
-    dsimp [cycles_cone, icycles, contract, cycles, contract₂]
-    rw [← (quotient C).map_comp, ← (quotient C).map_comp]
+    rw [← cancel_epi ((contract C).obj X).homologyπ, ← assoc, ShortComplex.homologyπ_naturality,
+      assoc]
+    erw [((contract C).obj Y).homologyIsCokernel.comp_coconePointUniqueUpToIso_hom
+      (homology_isCokernel Y) WalkingParallelPair.one,
+      ((contract C).obj X).homologyIsCokernel.comp_coconePointUniqueUpToIso_hom_assoc
+      (homology_isCokernel X) WalkingParallelPair.one]
+    dsimp [homology_cocone]
+    have eq : ShortComplex.cyclesMap ((contract C).map u) ≫ (cycles_iso_cycles C).inv.app Y =
+        (cycles_iso_cycles C).inv.app X ≫ (quotient C).map ((cycles C).map u) := by
+      rw [← cancel_mono ((cycles_iso_cycles C).hom.app Y), assoc, Iso.inv_hom_id_app,
+      ← cancel_mono ((contract C).obj Y).iCycles, assoc, assoc, cycles_iso_cycles_i, assoc,
+      ← (quotient C).map_comp, (icycles C).naturality, ← assoc]
+      erw [comp_id]
+      rw [ShortComplex.cyclesMap_i, ← cancel_epi ((cycles_iso_cycles C).hom.app X),
+        Iso.hom_inv_id_app_assoc, ← assoc, cycles_iso_cycles_i]
+      rfl
+    rw [← assoc, eq, assoc, assoc, cancel_epi ((cycles_iso_cycles C).inv.app X),
+      ← (quotient C).map_comp, ← (quotient C).map_comp]
     congr 1
-    ext
-    · dsimp; rw [zero_comp, zero_comp]
-    · dsimp; rw [id_comp, comp_id]; rfl
-    · change _ ≫ 0 = 0 ≫ _
-      rw [zero_comp, comp_zero]
+    exact (homologyπ C).naturality _
 
-#exit
-
-lemma cycles_iso_cycles_i (X : ComposableArrows C 2) :
-    (cycles_iso_cycles C).hom.app X ≫ ((contract C).obj X).iCycles =
-    (quotient C).map ((icycles C).app X) := by
-  dsimp [cycles_iso_cycles]
-  erw [IsLimit.conePointUniqueUpToIso_hom_comp (cycles_isKernel X)
-    ((contract C).obj X).cyclesIsKernel WalkingParallelPair.zero]
+lemma π_homology_iso_homology (X : ComposableArrows C 2) :
+    ((contract C).obj X).homologyπ ≫ (homology_iso_homology C).hom.app X  =
+    (cycles_iso_cycles C).inv.app X ≫ (quotient C).map ((homologyπ C).app X) := by
+  dsimp [homology_iso_homology]
+  erw [((contract C).obj X).homologyIsCokernel.comp_coconePointUniqueUpToIso_hom
+    (homology_isCokernel X) WalkingParallelPair.one]
   rfl
 
-lemma to_cycles_iso_cycles_i (X : ComposableArrows C 2) :
-    (quotient C).map ((tocycles C).app X) ≫ (cycles_iso_cycles C).hom.app X =
-    ((contract C).obj X).toCycles := by
-  rw [← cancel_mono ((contract C).obj X).iCycles, assoc, cycles_iso_cycles_i,
-    ShortComplex.toCycles_i]
-  rw [← (quotient C).map_comp, ← NatTrans.comp_app, tocycles_i]
-  rfl
-
-
+noncomputable def homology_iso_id : homology C ⋙ quotient C ≅ quotient C := by
+  refine NatIso.ofComponents (fun X ↦ ?_) (fun u ↦ ?_)
+  · sorry
+  · sorry
 
 end Calculs
 
