@@ -546,8 +546,32 @@ lemma π_homology_iso_homology (X : ComposableArrows C 2) :
 
 noncomputable def homology_iso_id : homology C ⋙ quotient C ≅ quotient C := by
   refine NatIso.ofComponents (fun X ↦ ?_) (fun u ↦ ?_)
-  · sorry
-  · sorry
+  · refine {hom := ?_, inv := ?_, hom_inv_id := ?_, inv_hom_id := ?_}
+    · exact (quotient C).map (ComposableArrows.homMk₂ (𝟙 _) biprod.fst biprod.fst
+        (by dsimp [homology]; simp) (by change biprod.map _ _ ≫ _ = _; simp))
+    · exact (quotient C).map (ComposableArrows.homMk₂ (𝟙 _) (biprod.lift (𝟙 _) (X.map' 1 2))
+        (biprod.lift (𝟙 _) (𝟙 _)) (by dsimp [homology]; rw [biprod.ext_to_iff]; simp)
+        (by change _ = _ ≫ biprod.map _ _; rw [biprod.ext_to_iff]; simp))
+    · dsimp
+      rw [← (quotient C).map_comp, ← (quotient C).map_id, quotient_map_eq_iff]
+      use 0, (biprod.fst - biprod.snd) ≫ biprod.inr
+      dsimp [homology]
+      change _ = _ + biprod.map _ _ ≫ _ + _
+      rw [biprod.ext_from_iff, biprod.ext_to_iff, biprod.ext_to_iff]
+      simp
+    · rw [← (quotient C).map_comp, ← (quotient C).map_id]
+      congr 1
+      ext
+      · dsimp; simp
+      · dsimp; simp
+      · change biprod.lift _ _ ≫ biprod.fst = _; simp
+  · dsimp [homology]
+    rw [← (quotient C).map_comp, ← (quotient C).map_comp]
+    congr 1
+    ext
+    · dsimp; simp
+    · dsimp; simp
+    · change biprod.map _ _ ≫ biprod.fst = biprod.fst ≫ _; simp; rfl
 
 end Calculs
 
