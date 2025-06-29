@@ -3,7 +3,7 @@ import Nori.Mathlib.CategoryTheory.Quotient.Preadditive
 import Nori.Mathlib.CategoryTheory.Limits.Shapes.Kernels
 import Nori.Homology
 
-universe u v u' v'
+universe u v u' v' u'' v''
 
 open CategoryTheory Category Functor Limits Adel
 
@@ -12,6 +12,8 @@ open scoped ZeroObject
 variable {C : Type u} [Category.{v} C] [Preadditive C]
 
 variable {D : Type u'} [Category.{v'} D] [Preadditive D] (F : C ⥤ D) [F.Additive]
+
+variable {E : Type u''} [Category.{v''} E] [Preadditive E] (G : D ⥤ E) [G.Additive]
 
 instance : PreservesBinaryBiproducts F := preservesBinaryBiproducts_of_preservesBiproducts F
 
@@ -52,6 +54,22 @@ noncomputable def functor_functorAdel : functor C ⋙ F.functorAdel ≅ F ⋙ fu
   Functor.associator _ _ _ ≪≫ isoWhiskerLeft (functor_aux C) (Quotient.lift.isLift _
   (F.mapComposableArrows 2 ⋙ Adel.quotient D) (functorAdel_aux F)) ≪≫
   (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight F.functor_mapComposableArrows (quotient D)
+
+def functorAdel_id : (𝟭 C).functorAdel ≅ 𝟭 (Adel C) := by
+  refine Quotient.natIsoLift _ ?_
+  refine (Quotient.lift.isLift _ ((𝟭 C).mapComposableArrows 2 ⋙ Adel.quotient C)
+    (functorAdel_aux (𝟭 C))) ≪≫ isoWhiskerRight whiskeringRightObjIdIso (quotient C) ≪≫
+    (quotient C).leftUnitor ≪≫ (Quotient.functor Adel.homotopic).rightUnitor.symm
+
+def functorAdel_comp : F.functorAdel ⋙ G.functorAdel ≅ (F ⋙ G).functorAdel := by
+  refine Quotient.natIsoLift _ ?_
+  refine (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight (Quotient.lift.isLift _
+    (F.mapComposableArrows 2 ⋙ Adel.quotient D) (functorAdel_aux F)) G.functorAdel ≪≫
+    Functor.associator _ _ _ ≪≫ isoWhiskerLeft (F.mapComposableArrows 2)
+    (Quotient.lift.isLift _ (G.mapComposableArrows 2 ⋙ Adel.quotient E) (functorAdel_aux G))
+    ≪≫ (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight (whiskeringRightObjCompIso F G)
+    (quotient E) ≪≫ (Quotient.lift.isLift _ ((F ⋙ G).mapComposableArrows 2 ⋙ Adel.quotient E)
+    (functorAdel_aux (F ⋙ G))).symm
 
 end Compat
 
@@ -300,5 +318,83 @@ instance : PreservesFiniteLimits F.functorAdel :=
 end PreservesFiniteLimits
 
 end Functor
+
+variable {F} {F' : C ⥤ D} [F'.Additive]
+
+namespace NatTrans
+
+def functorAdel (α :F ⟶ F') : F.functorAdel ⟶ F'.functorAdel := by
+  refine Quotient.natTransLift _ ?_
+  exact (Quotient.lift.isLift _ (F.mapComposableArrows 2 ⋙ Adel.quotient D)
+    (functorAdel_aux F)).hom ≫ whiskerRight ((whiskeringRight _ _ _).map α) (quotient D) ≫
+    (Quotient.lift.isLift _ (F'.mapComposableArrows 2 ⋙
+    Adel.quotient D) (functorAdel_aux F')).inv
+
+@[simp]
+lemma functorAdel_id : NatTrans.functorAdel (𝟙 F) = 𝟙 F.functorAdel := by
+  refine Quotient.natTrans_ext _ _ ?_
+  ext
+  dsimp [NatTrans.functorAdel]
+  simp only [Functor.map_id, id_app, whiskeringRight_obj_obj]
+  erw [comp_id, comp_id]
+  rfl
+
+@[simp]
+lemma functorAdel_comp {F'' : C ⥤ D} [F''.Additive] (α : F ⟶ F') (β : F' ⟶ F'') :
+    NatTrans.functorAdel (α ≫ β) = NatTrans.functorAdel α ≫ NatTrans.functorAdel β := by
+  refine Quotient.natTrans_ext _ _ ?_
+  ext
+  dsimp [NatTrans.functorAdel]
+  simp only [map_comp, comp_app, whiskeringRight_obj_obj, assoc]
+  erw [comp_id, id_comp, id_comp, id_comp, id_comp]
+
+end NatTrans
+
+namespace NatIso
+
+def functorAdel (α :F ≅ F') : F.functorAdel ≅ F'.functorAdel where
+  hom := NatTrans.functorAdel α.hom
+  inv := NatTrans.functorAdel α.inv
+  hom_inv_id := by
+    rw [← NatTrans.functorAdel_comp, Iso.hom_inv_id, NatTrans.functorAdel_id]
+  inv_hom_id := by
+    rw [← NatTrans.functorAdel_comp, Iso.inv_hom_id, NatTrans.functorAdel_id]
+
+@[simp]
+lemma functorAdel_refl : NatIso.functorAdel (Iso.refl F) = Iso.refl F.functorAdel := by
+  ext1
+  exact NatTrans.functorAdel_id
+
+@[simp]
+lemma functorAdel_trans {F'' : C ⥤ D} [F''.Additive] (α : F ≅ F') (β : F' ≅ F'') :
+    NatIso.functorAdel (α ≪≫ β) = NatIso.functorAdel α ≪≫ NatIso.functorAdel β := by
+  ext1
+  exact NatTrans.functorAdel_comp α.hom β.hom
+
+lemma functorAdel_symm (α : F ≅ F) :
+    NatIso.functorAdel α.symm = (NatIso.functorAdel α).symm := by
+  ext1
+  rw [← cancel_mono (NatIso.functorAdel α).symm.inv]
+  simp only [Iso.symm_inv, Iso.symm_hom, Iso.inv_hom_id]
+  rw [← Iso.trans_hom, ← NatIso.functorAdel_trans, Iso.symm_self_id]
+  simp
+
+end NatIso
+
+section Naturality
+
+variable [HasZeroObject C] [HasZeroObject D]
+
+variable (α : F ⟶ F')
+
+lemma functor_mapComposableArrows :
+    whiskerLeft (functor_aux C) ((whiskeringRight (Fin 3) C D).map α) ≫
+    F'.functor_mapComposableArrows.hom = F.functor_mapComposableArrows.hom ≫
+    whiskerRight α (functor_aux D) := sorry
+
+lemma functor_functorAdel_naturality : whiskerLeft (functor C) (NatTrans.functorAdel α) ≫
+    F'.functor_functorAdel.hom = F.functor_functorAdel.hom ≫ whiskerRight α (functor D) := sorry
+
+end Naturality
 
 end CategoryTheory

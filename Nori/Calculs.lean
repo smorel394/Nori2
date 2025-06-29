@@ -544,6 +544,7 @@ lemma π_homology_iso_homology (X : ComposableArrows C 2) :
     (homology_isCokernel X) WalkingParallelPair.one]
   rfl
 
+variable (C) in
 noncomputable def homology_iso_id : homology C ⋙ quotient C ≅ quotient C := by
   refine NatIso.ofComponents (fun X ↦ ?_) (fun u ↦ ?_)
   · refine {hom := ?_, inv := ?_, hom_inv_id := ?_, inv_hom_id := ?_}
