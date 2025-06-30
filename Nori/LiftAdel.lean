@@ -375,14 +375,19 @@ noncomputable def liftEquivalence : (C ⥤+ A) ≌ (Adel C ⥤ₑ A) where
     rfl
 -/
 
-noncomputable def liftEquivalence : (C ⥤+ A) ≌ (Adel C ⥤ₑ A) :=
-  Equivalence.mk (lift C A) (shrink C A) (lift_shrink C A).symm (shrink_lift C A)
+noncomputable def liftEquivalence : (Adel C ⥤ₑ A) ≌ (C ⥤+ A) :=
+  Equivalence.mk (shrink C A) (lift C A) (shrink_lift C A).symm (lift_shrink C A)
 
 @[simp]
-lemma liftEquivalence_inverse (G : Adel C ⥤ A) [PreservesFiniteLimits G]
+lemma liftEquivalence_functor (G : Adel C ⥤ A) [PreservesFiniteLimits G]
     [PreservesFiniteColimits G] :
-    (liftEquivalence C A).inverse.obj (ExactFunctor.of G) =
+    (liftEquivalence C A).functor.obj (ExactFunctor.of G) =
     AdditiveFunctor.of (functor C ⋙ G) := rfl
+
+@[simp]
+lemma liftEquivalence_inverse (F : C ⥤ A) [F.Additive] :
+    (liftEquivalence C A).inverse.obj (AdditiveFunctor.of F) =
+    ExactFunctor.of F.liftAdel := rfl
 
 noncomputable def liftAdelUnique (F : C ⥤ A) [F.Additive] (G : Adel C ⥤ A) [PreservesFiniteLimits G]
     [PreservesFiniteColimits G] (e : (functor C) ⋙ G ≅ F) :
@@ -398,16 +403,16 @@ variable {C A} {G G' G'' : Adel C ⥤ A} [PreservesFiniteLimits G] [PreservesFin
 lemma natTrans_ext (τ₁ τ₂ : G ⟶ G') (h : whiskerLeft (functor C) τ₁ = whiskerLeft (functor C) τ₂) :
     τ₁ = τ₂ := by
   set α : ExactFunctor.of G ⟶ ExactFunctor.of G' := τ₁
-  exact (liftEquivalence C A).inverse.map_injective h
+  exact (liftEquivalence C A).functor.map_injective h
 
 noncomputable def natTransLift (τ : functor C ⋙ G ⟶ functor C ⋙ G') : G ⟶ G' := by
-  set α : (liftEquivalence C A).inverse.obj (ExactFunctor.of G) ⟶
-    (liftEquivalence C A).inverse.obj (ExactFunctor.of G') := τ
-  exact (liftEquivalence C A).inverse.preimage α
+  set α : (liftEquivalence C A).functor.obj (ExactFunctor.of G) ⟶
+    (liftEquivalence C A).functor.obj (ExactFunctor.of G') := τ
+  exact (liftEquivalence C A).functor.preimage α
 
 lemma natTransLift_whisker (τ : functor C ⋙ G ⟶ functor C ⋙ G') :
     whiskerLeft (functor C) (natTransLift τ) = τ :=
-  (liftEquivalence C A).inverse.map_preimage _
+  (liftEquivalence C A).functor.map_preimage _
 
 @[simp]
 lemma natTransLift_app (τ : functor C ⋙ G ⟶ functor C ⋙ G') (X : C) :
@@ -421,16 +426,16 @@ lemma comp_natTransLift (τ : functor C ⋙ G ⟶ functor C ⋙ G')
     natTransLift τ ≫ natTransLift τ' = natTransLift (τ ≫ τ') := by
   change (natTransLift τ : ExactFunctor.of G ⟶ ExactFunctor.of G') ≫
     (natTransLift τ' : ExactFunctor.of G' ⟶ ExactFunctor.of G'') = natTransLift (τ ≫ τ')
-  apply (liftEquivalence C A).inverse.map_injective
+  apply (liftEquivalence C A).functor.map_injective
   dsimp [natTransLift]
-  erw [(liftEquivalence C A).inverse.map_comp]
+  erw [(liftEquivalence C A).functor.map_comp]
   simp only [Functor.map_preimage]
   rfl
 
 @[simp]
 lemma natTransLift_id : natTransLift (𝟙 (functor C ⋙ G)) = 𝟙 G := by
   change (natTransLift _ : ExactFunctor.of G ⟶ ExactFunctor.of G) = 𝟙 (ExactFunctor.of G)
-  apply (liftEquivalence C A).inverse.map_injective
+  apply (liftEquivalence C A).functor.map_injective
   dsimp [natTransLift]
   simp only [map_preimage, Functor.map_id]
   rfl
