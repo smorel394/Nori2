@@ -353,8 +353,15 @@ variable {E : Type u''} [Category.{v''} E] [Preadditive E] {G G' : D ⥤ E} [G.A
   [G'.Additive]
 
 lemma functorAdel_comp_naturality_right (α : G ⟶ G') :
-    whiskerLeft F.functorAdel (NatTrans.functorAdel α) ≫ (F.functorAdel_comp G').hom =
-    (F.functorAdel_comp G).hom ≫ NatTrans.functorAdel (whiskerLeft F α) := sorry
+    (F.functorAdel_comp G).hom ≫ NatTrans.functorAdel (whiskerLeft F α) =
+    whiskerLeft F.functorAdel (NatTrans.functorAdel α) ≫ (F.functorAdel_comp G').hom := by
+  refine Quotient.natTrans_ext _ _ ?_
+  ext
+  dsimp [Functor.functorAdel_comp]
+  simp only [id_comp, assoc]
+  erw [Functor.map_id, id_comp, id_comp, id_comp, id_comp, Functor.map_id, comp_id, comp_id,
+    comp_id, comp_id]
+  rfl
 
 end NatTrans
 

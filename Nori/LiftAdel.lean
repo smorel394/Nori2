@@ -1,3 +1,4 @@
+import Nori.Mathlib.CategoryTheory.Quotient
 import Nori.Functoriality
 import Nori.HomologyExact
 import Nori.Calculs
@@ -79,10 +80,6 @@ end Naturality
 
 section Compat
 
-variable [HasFiniteBiproducts C]
-
-local instance : HasBinaryBiproducts C := hasBinaryBiproducts_of_finite_biproducts _
-
 variable (C) in
 noncomputable def functor_homology_iso_id :
     (functor C).functorAdel ⋙ homologyLeftAbelian (Adel C) ≅ 𝟭 (Adel C) := by
@@ -116,10 +113,108 @@ lemma homologyLeftAbelien_comp_exact_naturality {G G': Adel C ⥤ A} [PreservesF
     (α : G ⟶ G') :
     whiskerRight (NatTrans.functorAdel α) (homologyLeftAbelian A) ≫
     (homologyLeftAbelien_comp_exact G').hom = (homologyLeftAbelien_comp_exact G).hom ≫
-    whiskerLeft (homologyLeftAbelian (Adel C)) α := sorry
+    whiskerLeft (homologyLeftAbelian (Adel C)) α := by
+  dsimp [homologyLeftAbelien_comp_exact]
+  refine Quotient.natTrans_ext _ _ ?_
+  simp only [whiskerLeft_comp, whiskerLeft_natTransLift, whiskerLeft_twice, assoc]
+  have :  whiskerLeft (Quotient.functor Adel.homotopic) (whiskerRight (NatTrans.functorAdel α)
+      (homologyLeftAbelian A)) ≫ ((Quotient.functor Adel.homotopic).associator G'.functorAdel
+      (homologyLeftAbelian A)).inv = ((Quotient.functor Adel.homotopic).associator
+      G.functorAdel (homologyLeftAbelian A)).inv ≫ whiskerRight (whiskerLeft _
+      (NatTrans.functorAdel α)) (homologyLeftAbelian A) := by aesop
+  slice_lhs 1 2 => rw [this]
+  have : whiskerRight (whiskerLeft (Quotient.functor Adel.homotopic) (NatTrans.functorAdel α))
+      (homologyLeftAbelian A) ≫ whiskerRight (Quotient.lift.isLift Adel.homotopic
+      (G'.mapComposableArrows 2 ⋙ quotient A) (functorAdel_aux G')).hom
+      (homologyLeftAbelian A) = whiskerRight (Quotient.lift.isLift Adel.homotopic
+      (G.mapComposableArrows 2 ⋙ quotient A) (functorAdel_aux G)).hom
+      (homologyLeftAbelian A) ≫ whiskerRight (whiskerRight ((whiskeringRight (Fin 3) _ _).map α)
+      (quotient A)) (homologyLeftAbelian A) := by
+    rw [← whiskerRight_comp, whiskerRight_comp, ← whiskerRight_comp, ← whiskerRight_comp]
+    congr 1
+    dsimp [NatTrans.functorAdel]
+    aesop
+  slice_lhs 2 3 => rw [this]
+  have : whiskerRight (whiskerRight ((whiskeringRight (Fin 3) (Adel C) A).map α) (quotient A))
+      (homologyLeftAbelian A) ≫ ((G'.mapComposableArrows 2).associator (quotient A)
+      (homologyLeftAbelian A)).hom = ((G.mapComposableArrows 2).associator (quotient A)
+      (homologyLeftAbelian A)).hom ≫ whiskerRight ((whiskeringRight (Fin 3) (Adel C) A).map α)
+      _ := by
+    ext
+    simp only [comp_obj, whiskeringRight_obj_obj, Nat.reduceAdd, whiskerRight_twice, assoc,
+      NatTrans.comp_app, associator_hom_app, whiskerRight_app, Functor.comp_map, associator_inv_app,
+      id_comp]
+    erw [id_comp, comp_id]
+  slice_lhs 3 4 => rw [this]
+  have : whiskerRight ((whiskeringRight (Fin 3) (Adel C) A).map α) (quotient A ⋙
+      homologyLeftAbelian A) ≫ whiskerLeft (G'.mapComposableArrows 2)
+      (quotient_homologyLeftAbelian A).hom = whiskerLeft (G.mapComposableArrows 2)
+      (quotient_homologyLeftAbelian A).hom ≫ whiskerRight ((whiskeringRight (Fin 3)
+      (Adel C) A).map α) (homologyLeft A) := by
+    dsimp [quotient_homologyLeftAbelian]
+    ext
+    simp only [comp_obj, whiskeringRight_obj_obj, NatTrans.comp_app, whiskerRight_app,
+      Functor.comp_map, whiskerLeft_app, Quotient.lift.isLift_hom]
+    erw [id_comp, comp_id]
+    rfl
+  slice_lhs 4 5 => rw [this]
+  have :  whiskerRight ((whiskeringRight (Fin 3) (Adel C) A).map α) (homologyLeft A) ≫
+      ((G'.mapComposableArrows 2).associator (contractLeft A)
+      (ShortComplex.homologyFunctor A)).inv = ((G.mapComposableArrows 2).associator
+      (contractLeft A) (ShortComplex.homologyFunctor A)).inv ≫ whiskerRight (whiskerRight
+      ((whiskeringRight (Fin 3) (Adel C) A).map α) (contractLeft A))
+      (ShortComplex.homologyFunctor A) := by
+    ext
+    dsimp
+    erw [id_comp, comp_id]
+    rfl
+  slice_lhs 5 6 => rw [this]
+  have : whiskerRight (whiskerRight ((whiskeringRight (Fin 3) (Adel C) A).map α)
+      (contractLeft A)) (ShortComplex.homologyFunctor A) ≫ whiskerRight
+      (contractLeft_functoriality G').hom (ShortComplex.homologyFunctor A) = whiskerRight
+      (contractLeft_functoriality G).hom (ShortComplex.homologyFunctor A) ≫ whiskerRight
+      (whiskerLeft (contractLeft (Adel C)) (NatTrans.mapShortComplex α))
+      (ShortComplex.homologyFunctor A) := by
+    rw [← whiskerRight_comp, whiskerRight_comp, ← whiskerRight_comp, ← whiskerRight_comp]
+    congr 1
+    exact contractLeft_functoriality_naturality α
+  slice_lhs 6 7 => rw [this]
+  have :  whiskerRight (whiskerLeft (contractLeft (Adel C)) (NatTrans.mapShortComplex α))
+      (ShortComplex.homologyFunctor A) ≫ ((contractLeft (Adel C)).associator G'.mapShortComplex
+      (ShortComplex.homologyFunctor A)).hom = ((contractLeft (Adel C)).associator
+      G.mapShortComplex (ShortComplex.homologyFunctor A)).hom ≫ whiskerLeft
+      (contractLeft (Adel C)) (whiskerRight (NatTrans.mapShortComplex α)
+      (ShortComplex.homologyFunctor A)) := by aesop
+  slice_lhs 7 8 => rw [this]
+  have : whiskerLeft (contractLeft (Adel C)) (whiskerRight (NatTrans.mapShortComplex α)
+      (ShortComplex.homologyFunctor A)) ≫ whiskerLeft (contractLeft (Adel C))
+      (ShortComplex.homologyFunctorIso G').hom = whiskerLeft (contractLeft (Adel C))
+      (ShortComplex.homologyFunctorIso G).hom ≫ whiskerLeft (contractLeft (Adel C))
+      (whiskerLeft (ShortComplex.homologyFunctor (Adel C)) α) := by
+    rw [← whiskerLeft_comp, ← whiskerLeft_comp]
+    congr 1
+    dsimp [NatTrans.mapShortComplex, ShortComplex.homologyFunctorIso]
+    ext
+    simp only [comp_obj, mapShortComplex_obj, ShortComplex.homologyFunctor_obj, NatTrans.comp_app,
+      whiskerRight_app, ShortComplex.homologyFunctor_map, NatIso.ofComponents_hom_app,
+      whiskerLeft_app]
+    rw [NatTrans.app_homology]
+    simp only [Iso.hom_inv_id_assoc, Iso.cancel_iso_hom_right]
+    rfl
+  slice_lhs 8 9 => rw [this]
+  have : whiskerLeft (contractLeft (Adel C)) (whiskerLeft (ShortComplex.homologyFunctor
+      (Adel C)) α) ≫ ((contractLeft (Adel C)).associator (ShortComplex.homologyFunctor (Adel C))
+      G').inv = ((contractLeft (Adel C)).associator (ShortComplex.homologyFunctor (Adel C))
+      G).inv ≫ whiskerLeft _ α := by aesop
+  slice_lhs 9 10 => rw [this]
+  have : whiskerLeft (contractLeft (Adel C) ⋙ ShortComplex.homologyFunctor (Adel C)) α ≫
+      whiskerRight (quotient_homologyLeftAbelian (Adel C)).inv G' = whiskerRight
+      (quotient_homologyLeftAbelian (Adel C)).inv G ≫ whiskerLeft _ α := by aesop
+  slice_lhs 10 11 => rw [this]
+  simp [quotient]
 
-noncomputable def liftAdel_unique (G : Adel C ⥤ A) [PreservesFiniteLimits G] [PreservesFiniteColimits G] :
-    (functor C ⋙ G).liftAdel ≅ G := by
+noncomputable def liftAdel_unique (G : Adel C ⥤ A) [PreservesFiniteLimits G]
+    [PreservesFiniteColimits G] : (functor C ⋙ G).liftAdel ≅ G := by
   refine isoWhiskerRight ((functor C).functorAdel_comp G).symm (homologyLeftAbelian A) ≪≫
     Functor.associator _ _ _ ≪≫ isoWhiskerLeft ((functor C).functorAdel)
     (homologyLeftAbelien_comp_exact G)
@@ -139,7 +234,39 @@ lemma liftAdel_unique_naturality {G G': Adel C ⥤ A} [PreservesFiniteLimits G]
       (homologyLeftAbelian A) := by
     rw [← whiskerRight_comp, ← whiskerRight_comp]
     congr 1
-
+    rw [← cancel_epi ((functor C).functorAdel_comp G).hom, ← cancel_mono
+      ((functor C).functorAdel_comp G').hom, Iso.hom_inv_id_assoc, assoc, assoc, Iso.inv_hom_id,
+      comp_id]
+    exact NatTrans.functorAdel_comp_naturality_right α
+  slice_lhs 1 2 => rw [this]
+  have : whiskerRight (whiskerLeft (functor C).functorAdel (NatTrans.functorAdel α))
+      (homologyLeftAbelian A) ≫ ((functor C).functorAdel.associator G'.functorAdel
+      (homologyLeftAbelian A)).hom = ((functor C).functorAdel.associator G.functorAdel
+      (homologyLeftAbelian A)).hom ≫ whiskerLeft (functor C).functorAdel (whiskerRight
+      (NatTrans.functorAdel α) (homologyLeftAbelian A)) := by
+    ext; simp
+  slice_lhs 2 3 => rw [this]
+  have : whiskerLeft (functor C).functorAdel (whiskerRight (NatTrans.functorAdel α)
+      (homologyLeftAbelian A)) ≫ whiskerLeft (functor C).functorAdel
+      (homologyLeftAbelien_comp_exact G').hom = whiskerLeft (functor C).functorAdel
+      (homologyLeftAbelien_comp_exact G).hom ≫ whiskerLeft (functor C).functorAdel
+      (whiskerLeft (homologyLeftAbelian (Adel C)) α) := by
+    rw [← whiskerLeft_comp, ← whiskerLeft_comp]
+    congr 1
+    exact homologyLeftAbelien_comp_exact_naturality α
+  slice_lhs 3 4 => rw [this]
+  have : whiskerLeft (functor C).functorAdel (whiskerLeft (homologyLeftAbelian (Adel C)) α) ≫
+      ((functor C).functorAdel.associator (homologyLeftAbelian (Adel C)) G').inv =
+      ((functor C).functorAdel.associator (homologyLeftAbelian (Adel C)) G).inv ≫
+      whiskerLeft _ α := by ext; simp
+  slice_lhs 4 5 => rw [this]
+  have : whiskerLeft ((functor C).functorAdel ⋙ homologyLeftAbelian (Adel C)) α ≫
+      whiskerRight (functor_homology_iso_id C).hom G' =
+      whiskerRight (functor_homology_iso_id C).hom G ≫ whiskerLeft _ α := by ext; simp
+  slice_lhs 5 6 => rw [this]
+  have : whiskerLeft (𝟭 (Adel C)) α ≫ G'.leftUnitor.hom = G.leftUnitor.hom ≫ α := by ext; simp
+  slice_lhs 6 7 => rw [this]
+  simp
 
 end Compat
 

@@ -2,6 +2,7 @@ import Mathlib.Algebra.Group.Fin.Basic
 import Mathlib.CategoryTheory.Abelian.Refinements
 import Mathlib.Algebra.Homology.ExactSequence
 import Nori.Mathlib.CategoryTheory.Quotient.Preadditive
+import Nori.Mathlib.Algebra.Homology.ShortComplex.Basic
 import Nori.Adel
 
 universe u v u' v'
@@ -125,18 +126,17 @@ instance : (homologyLeft A).Additive := by
   dsimp [homologyLeft]
   infer_instance
 
-variable {A} {B : Type u} [Category.{v} B] [Abelian B] (G : A ⥤ B)
+variable {A} {B : Type u} [Category.{v} B] [Abelian B] (G : A ⥤ B) [PreservesFiniteLimits G]
 
-noncomputable def contractLeft_functoriality [PreservesFiniteLimits G] :
+noncomputable def contractLeft_functoriality :
     G.mapComposableArrows 2 ⋙ contractLeft B ≅ contractLeft A ⋙ G.mapShortComplex := by
   refine NatIso.ofComponents (fun X ↦ ?_) (fun u ↦ ?_)
-  · dsimp [contractLeft]
-    refine ShortComplex.isoMk ?_ (Iso.refl _) (Iso.refl _) ?_ ?_
+  · refine ShortComplex.isoMk ?_ (Iso.refl _) (Iso.refl _) ?_ ?_
     · exact kernelIsoOfEq (f := G.map (X.map' 0 1) ≫ G.map (X.map' 1 2))
         (g := G.map (X.map' 0 1 ≫ X.map' 1 2)) (by simp) ≪≫
         (PreservesKernel.iso G (X.map' 0 1 ≫ X.map' 1 2)).symm
-    · dsimp; simp
-    · dsimp; simp
+    · dsimp [contractLeft]; simp
+    · dsimp [contractLeft]; simp
   · ext
     · rw [← cancel_mono (PreservesKernel.iso G _).hom, ← cancel_mono (kernel.ι _)]
       dsimp [contractLeft]
@@ -147,6 +147,27 @@ noncomputable def contractLeft_functoriality [PreservesFiniteLimits G] :
       simp
     · dsimp [contractLeft]; simp
     · dsimp [contractLeft]; simp
+
+variable {G} {G' : A ⥤ B} [PreservesFiniteLimits G'] (α : G ⟶ G')
+
+attribute [local instance] Functor.additive_of_preserves_binary_products
+
+lemma contractLeft_functoriality_naturality : whiskerRight
+    ((whiskeringRight (Fin 3) A B).map α) (contractLeft B) ≫
+    (contractLeft_functoriality G').hom = (contractLeft_functoriality G).hom ≫
+    whiskerLeft (contractLeft A) (NatTrans.mapShortComplex α) := by
+  dsimp [contractLeft, contractLeft_functoriality, NatTrans.mapShortComplex]
+  ext
+  · dsimp
+    rw [← cancel_mono (PreservesKernel.iso G' _).hom, assoc, assoc, Iso.inv_hom_id]
+    rw [← cancel_mono (kernel.ι _)]
+    simp only [comp_id, lift_comp_kernelIsoOfEq_hom, kernel.lift_ι, assoc,
+      PreservesKernel.iso_hom, kernelComparison_comp_ι]
+    rw [← α.naturality, ← assoc, ← assoc]
+    congr 1
+    simp
+  · dsimp; simp
+  · dsimp; simp
 
 end ContractLeft
 
