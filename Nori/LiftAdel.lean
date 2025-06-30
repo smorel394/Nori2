@@ -317,6 +317,30 @@ noncomputable def shrink_lift : shrink C A ⋙ lift C A ≅ 𝟭 (Adel C ⥤ₑ 
   · exact ObjectProperty.isoMk _ (liftAdel_unique F.1)
   · exact (ObjectProperty.ι _).map_injective (liftAdel_unique_naturality α)
 
+noncomputable def liftEquivalence : (C ⥤+ A) ≌ (Adel C ⥤ₑ A) where
+  functor := lift C A
+  inverse := shrink C A
+  unitIso := (lift_shrink C A).symm
+  counitIso := shrink_lift C A
+  functor_unitIso_comp F := by
+    refine (ObjectProperty.ι _).map_injective ?_
+    dsimp [lift_shrink, shrink_lift, lift, lift_aux]
+    have : Epi (whiskerRight (NatTrans.functorAdel F.obj.liftAdelIsLift.hom)
+    (homologyLeftAbelian A)) := sorry
+    rw [← cancel_epi (whiskerRight (NatTrans.functorAdel F.obj.liftAdelIsLift.hom)
+      (homologyLeftAbelian A))]
+    simp only [ObjectProperty.lift_obj_obj]
+    erw [comp_id, ← assoc]
+    rw [← whiskerRight_comp, ← NatTrans.functorAdel_comp, Iso.hom_inv_id, NatTrans.functorAdel_id]
+    erw [whiskerRight_id, id_comp]
+    dsimp [liftAdelIsLift, liftAdel_unique]
+    ext
+    simp
+    simp [homologyLeftAbelien_comp_exact]
+
+
+
+
 end Adel
 
 end TwoCat
