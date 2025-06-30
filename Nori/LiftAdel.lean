@@ -9,6 +9,8 @@ open CategoryTheory Category Functor Limits Adel
 
 open scoped ZeroObject
 
+attribute [local instance] Functor.additive_of_preserves_binary_products
+
 variable {C : Type u} [Category.{v} C] [Preadditive C] [HasFiniteBiproducts C]
 
 variable {A : Type u'} [Category.{v'} A] [Abelian A]
@@ -36,7 +38,7 @@ instance : PreservesFiniteColimits F.liftAdel :=
 
 noncomputable def liftAdelIsLift : functor C ⋙ F.liftAdel ≅ F :=
   (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight F.functor_functorAdel (homologyLeftAbelian A)
-  ≪≫ Functor.associator _ _ _ ≪≫ isoWhiskerLeft F (functor_homologyLeftAbelian A) ≪≫ F.leftUnitor
+  ≪≫ Functor.associator _ _ _ ≪≫ isoWhiskerLeft F (functor_homologyLeftAbelian A) ≪≫ F.rightUnitor
 
 end Functor
 
@@ -49,9 +51,9 @@ lemma liftAdelIsLift_naturality : whiskerLeft (functor C)
     F.liftAdelIsLift.hom ≫ α := by
   dsimp [Functor.liftAdelIsLift]
   simp only [assoc]
-  have : whiskerLeft F (functor_homologyLeftAbelian A).hom ≫ F.leftUnitor.hom ≫ α =
+  have : whiskerLeft F (functor_homologyLeftAbelian A).hom ≫ F.rightUnitor.hom ≫ α =
       whiskerRight α (functor A ⋙ homologyLeftAbelian A) ≫ whiskerLeft F'
-      (functor_homologyLeftAbelian A).hom ≫ F'.leftUnitor.hom := by
+      (functor_homologyLeftAbelian A).hom ≫ F'.rightUnitor.hom := by
     ext
     dsimp
     simp only [id_comp, comp_id]
@@ -91,8 +93,6 @@ noncomputable def functor_homology_iso_id :
   dsimp [homologyLeft]
   exact (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight (contract_compat C)
     (ShortComplex.homologyFunctor (Adel C)) ≪≫ homology_iso_homology C ≪≫ homology_iso_id C
-
-attribute [local instance] Functor.additive_of_preserves_binary_products
 
 noncomputable def homologyLeftAbelien_comp_exact (G : Adel C ⥤ A)
     [PreservesFiniteLimits G] [PreservesFiniteColimits G] :
@@ -268,6 +268,47 @@ lemma liftAdel_unique_naturality {G G': Adel C ⥤ A} [PreservesFiniteLimits G]
   slice_lhs 6 7 => rw [this]
   simp
 
+-- Is this true ?
+/-
+variable (F : C ⥤ A) [F.Additive]
+
+attribute [local instance] HasFiniteBiproducts.of_hasFiniteProducts
+
+lemma unique_vs_isLift : (liftAdel_unique F.liftAdel).hom =
+    whiskerRight (NatTrans.functorAdel F.liftAdelIsLift.hom) (homologyLeftAbelian A) := by
+  dsimp [Functor.liftAdelIsLift]
+  simp only [NatTrans.functorAdel_comp]
+  dsimp [liftAdel_unique]
+  refine Quotient.natTrans_ext _ _ ?_
+  ext X
+  dsimp
+  simp only [comp_id, id_comp, map_comp]
+  conv_rhs => congr; erw [NatTrans.functorAdel_id]; rw [NatTrans.id_app, Functor.map_id]; rfl
+              congr; rfl; congr
+              erw [NatTrans.functorAdel_id]; rw [NatTrans.id_app, Functor.map_id]; rfl
+              congr; rfl
+              erw [NatTrans.functorAdel_id]; rw [NatTrans.id_app, Functor.map_id]
+  simp only [comp_id, id_comp]
+  dsimp [NatTrans.functorAdel]
+  simp only [map_comp, assoc]
+  conv_rhs => congr; erw [Functor.map_id]; rfl; congr; rfl; congr; erw [Functor.map_id]; rfl;
+              congr; erw [Functor.map_id]; rfl; congr; rfl; erw [Functor.map_id]
+  simp only [comp_id, id_comp]
+  have : (((functor C).functorAdel_comp F.liftAdel).inv.app
+      ((Quotient.functor Adel.homotopic).obj X)) = 𝟙 _ := by
+    dsimp [Functor.functorAdel_comp, whiskeringRightObjCompIso]
+    simp only [comp_id, Functor.map_id]
+    erw [Functor.map_id, comp_id]
+    rfl
+  rw [this, Functor.map_id]; erw [id_comp]
+  dsimp [functor_homology_iso_id]
+  simp only [comp_id, id_comp, map_comp]
+  conv_lhs => congr; rfl; congr; erw [Functor.map_id, Functor.map_id]; rfl; congr
+              erw [Functor.map_id]; rfl; congr; erw [Functor.map_id]
+  simp only [id_comp]
+ -/
+
+
 end Compat
 
 section TwoCat
@@ -317,6 +358,8 @@ noncomputable def shrink_lift : shrink C A ⋙ lift C A ≅ 𝟭 (Adel C ⥤ₑ 
   · exact ObjectProperty.isoMk _ (liftAdel_unique F.1)
   · exact (ObjectProperty.ι _).map_injective (liftAdel_unique_naturality α)
 
+-- I don't know if the formula below gives an equivalence on the nose... :-()
+/-
 noncomputable def liftEquivalence : (C ⥤+ A) ≌ (Adel C ⥤ₑ A) where
   functor := lift C A
   inverse := shrink C A
@@ -325,20 +368,73 @@ noncomputable def liftEquivalence : (C ⥤+ A) ≌ (Adel C ⥤ₑ A) where
   functor_unitIso_comp F := by
     refine (ObjectProperty.ι _).map_injective ?_
     dsimp [lift_shrink, shrink_lift, lift, lift_aux]
-    have : Epi (whiskerRight (NatTrans.functorAdel F.obj.liftAdelIsLift.hom)
-    (homologyLeftAbelian A)) := sorry
-    rw [← cancel_epi (whiskerRight (NatTrans.functorAdel F.obj.liftAdelIsLift.hom)
-      (homologyLeftAbelian A))]
-    simp only [ObjectProperty.lift_obj_obj]
-    erw [comp_id, ← assoc]
-    rw [← whiskerRight_comp, ← NatTrans.functorAdel_comp, Iso.hom_inv_id, NatTrans.functorAdel_id]
-    erw [whiskerRight_id, id_comp]
-    dsimp [liftAdelIsLift, liftAdel_unique]
-    ext
-    simp
-    simp [homologyLeftAbelien_comp_exact]
+    rw [unique_vs_isLift]
+    erw [← whiskerRight_comp]
+    rw [← NatTrans.functorAdel_comp, Iso.inv_hom_id, NatTrans.functorAdel_id]
+    erw [whiskerRight_id]
+    rfl
+-/
 
+noncomputable def liftEquivalence : (C ⥤+ A) ≌ (Adel C ⥤ₑ A) :=
+  Equivalence.mk (lift C A) (shrink C A) (lift_shrink C A).symm (shrink_lift C A)
 
+noncomputable def liftAdelUnique (F : C ⥤ A) [F.Additive] (G : Adel C ⥤ A) [PreservesFiniteLimits G]
+    [PreservesFiniteColimits G] (e : (functor C) ⋙ G ≅ F) :
+    G ≅ F.liftAdel :=
+  (ObjectProperty.ι _).mapIso ((shrink_lift C A).symm.app (ExactFunctor.of G) ≪≫ (lift C A).mapIso
+  (ObjectProperty.isoMk (fun F : C ⥤ A => F.Additive) e :
+  (shrink C A).obj (ExactFunctor.of G) ≅ AdditiveFunctor.of F))
+
+variable {C A} {G G' G'' : Adel C ⥤ A} [PreservesFiniteLimits G] [PreservesFiniteColimits G]
+  [PreservesFiniteLimits G'] [PreservesFiniteColimits G'] [PreservesFiniteLimits G'']
+  [PreservesFiniteColimits G'']
+
+lemma natTrans_ext (τ₁ τ₂ : G ⟶ G') (h : whiskerLeft (functor C) τ₁ = whiskerLeft (functor C) τ₂) :
+    τ₁ = τ₂ := by
+  set α : ExactFunctor.of G ⟶ ExactFunctor.of G' := τ₁
+  exact (liftEquivalence C A).inverse.map_injective h
+
+noncomputable def natTransLift (τ : functor C ⋙ G ⟶ functor C ⋙ G') : G ⟶ G' := by
+  set α : (liftEquivalence C A).inverse.obj (ExactFunctor.of G) ⟶
+    (liftEquivalence C A).inverse.obj (ExactFunctor.of G') := τ
+  exact (liftEquivalence C A).inverse.preimage α
+
+lemma natTransLift_whisker (τ : functor C ⋙ G ⟶ functor C ⋙ G') :
+    whiskerLeft (functor C) (natTransLift τ) = τ :=
+  (liftEquivalence C A).inverse.map_preimage _
+
+@[simp]
+lemma natTransLift_app (τ : functor C ⋙ G ⟶ functor C ⋙ G') (X : C) :
+    (natTransLift τ).app ((functor C).obj X) = τ.app X := by
+  conv_rhs => rw [← natTransLift_whisker τ]
+  simp
+
+@[reassoc]
+lemma comp_natTransLift (τ : functor C ⋙ G ⟶ functor C ⋙ G')
+    (τ' : functor C ⋙ G' ⟶ functor C ⋙ G'') :
+    natTransLift τ ≫ natTransLift τ' = natTransLift (τ ≫ τ') := by
+  change (natTransLift τ : ExactFunctor.of G ⟶ ExactFunctor.of G') ≫
+    (natTransLift τ' : ExactFunctor.of G' ⟶ ExactFunctor.of G'') = natTransLift (τ ≫ τ')
+  apply (liftEquivalence C A).inverse.map_injective
+  dsimp [natTransLift]
+  erw [(liftEquivalence C A).inverse.map_comp]
+  simp only [Functor.map_preimage]
+  rfl
+
+@[simp]
+lemma natTransLift_id : natTransLift (𝟙 (functor C ⋙ G)) = 𝟙 G := by
+  change (natTransLift _ : ExactFunctor.of G ⟶ ExactFunctor.of G) = 𝟙 (ExactFunctor.of G)
+  apply (liftEquivalence C A).inverse.map_injective
+  dsimp [natTransLift]
+  simp only [map_preimage, Functor.map_id]
+  rfl
+
+@[simps]
+noncomputable def natIsoLift (τ : functor C ⋙ G ≅ functor C ⋙ G') : G ≅ G' where
+  hom := natTransLift τ.hom
+  inv := natTransLift τ.inv
+  hom_inv_id := by rw [comp_natTransLift, τ.hom_inv_id, natTransLift_id]
+  inv_hom_id := by rw [comp_natTransLift, τ.inv_hom_id, natTransLift_id]
 
 
 end Adel
