@@ -378,6 +378,12 @@ noncomputable def liftEquivalence : (C ⥤+ A) ≌ (Adel C ⥤ₑ A) where
 noncomputable def liftEquivalence : (C ⥤+ A) ≌ (Adel C ⥤ₑ A) :=
   Equivalence.mk (lift C A) (shrink C A) (lift_shrink C A).symm (shrink_lift C A)
 
+@[simp]
+lemma liftEquivalence_inverse (G : Adel C ⥤ A) [PreservesFiniteLimits G]
+    [PreservesFiniteColimits G] :
+    (liftEquivalence C A).inverse.obj (ExactFunctor.of G) =
+    AdditiveFunctor.of (functor C ⋙ G) := rfl
+
 noncomputable def liftAdelUnique (F : C ⥤ A) [F.Additive] (G : Adel C ⥤ A) [PreservesFiniteLimits G]
     [PreservesFiniteColimits G] (e : (functor C) ⋙ G ≅ F) :
     G ≅ F.liftAdel :=
