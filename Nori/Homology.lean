@@ -125,6 +125,29 @@ instance : (homologyLeft A).Additive := by
   dsimp [homologyLeft]
   infer_instance
 
+variable {A} {B : Type u} [Category.{v} B] [Abelian B] (G : A ⥤ B)
+
+noncomputable def contractLeft_functoriality [PreservesFiniteLimits G] :
+    G.mapComposableArrows 2 ⋙ contractLeft B ≅ contractLeft A ⋙ G.mapShortComplex := by
+  refine NatIso.ofComponents (fun X ↦ ?_) (fun u ↦ ?_)
+  · dsimp [contractLeft]
+    refine ShortComplex.isoMk ?_ (Iso.refl _) (Iso.refl _) ?_ ?_
+    · exact kernelIsoOfEq (f := G.map (X.map' 0 1) ≫ G.map (X.map' 1 2))
+        (g := G.map (X.map' 0 1 ≫ X.map' 1 2)) (by simp) ≪≫
+        (PreservesKernel.iso G (X.map' 0 1 ≫ X.map' 1 2)).symm
+    · dsimp; simp
+    · dsimp; simp
+  · ext
+    · rw [← cancel_mono (PreservesKernel.iso G _).hom, ← cancel_mono (kernel.ι _)]
+      dsimp [contractLeft]
+      simp only [assoc, Iso.inv_hom_id, comp_id, kernelIsoOfEq_hom_comp_ι, kernel.lift_ι,
+        PreservesKernel.iso_hom, kernelComparison_comp_ι]
+      conv_rhs => congr; rfl; congr; rfl
+                  rw [← G.map_comp, kernel.lift_ι, G.map_comp]
+      simp
+    · dsimp [contractLeft]; simp
+    · dsimp [contractLeft]; simp
+
 end ContractLeft
 
 section ContractRight

@@ -349,6 +349,13 @@ lemma functorAdel_comp {F'' : C ⥤ D} [F''.Additive] (α : F ⟶ F') (β : F' �
   simp only [map_comp, comp_app, whiskeringRight_obj_obj, assoc]
   erw [comp_id, id_comp, id_comp, id_comp, id_comp]
 
+variable {E : Type u''} [Category.{v''} E] [Preadditive E] {G G' : D ⥤ E} [G.Additive]
+  [G'.Additive]
+
+lemma functorAdel_comp_naturality_right (α : G ⟶ G') :
+    whiskerLeft F.functorAdel (NatTrans.functorAdel α) ≫ (F.functorAdel_comp G').hom =
+    (F.functorAdel_comp G).hom ≫ NatTrans.functorAdel (whiskerLeft F α) := sorry
+
 end NatTrans
 
 namespace NatIso

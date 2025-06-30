@@ -83,6 +83,7 @@ variable [HasFiniteBiproducts C]
 
 local instance : HasBinaryBiproducts C := hasBinaryBiproducts_of_finite_biproducts _
 
+variable (C) in
 noncomputable def functor_homology_iso_id :
     (functor C).functorAdel ⋙ homologyLeftAbelian (Adel C) ≅ 𝟭 (Adel C) := by
   refine Quotient.natIsoLift _ ?_
@@ -93,6 +94,52 @@ noncomputable def functor_homology_iso_id :
   dsimp [homologyLeft]
   exact (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight (contract_compat C)
     (ShortComplex.homologyFunctor (Adel C)) ≪≫ homology_iso_homology C ≪≫ homology_iso_id C
+
+attribute [local instance] Functor.additive_of_preserves_binary_products
+
+noncomputable def homologyLeftAbelien_comp_exact (G : Adel C ⥤ A)
+    [PreservesFiniteLimits G] [PreservesFiniteColimits G] :
+    G.functorAdel ⋙ homologyLeftAbelian A ≅ homologyLeftAbelian (Adel C) ⋙ G := by
+  refine Quotient.natIsoLift _ ?_
+  exact (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight (Quotient.lift.isLift _
+    (G.mapComposableArrows 2 ⋙ quotient A) (functorAdel_aux G))
+    (homologyLeftAbelian A) ≪≫ Functor.associator _ _ _ ≪≫
+    isoWhiskerLeft (G.mapComposableArrows 2) (quotient_homologyLeftAbelian A) ≪≫
+    (Functor.associator _ _ _).symm  ≪≫ isoWhiskerRight (contractLeft_functoriality G)
+    (ShortComplex.homologyFunctor A) ≪≫ Functor.associator _ _ _ ≪≫ isoWhiskerLeft
+    (contractLeft (Adel C)) (ShortComplex.homologyFunctorIso G) ≪≫
+    (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight
+    (quotient_homologyLeftAbelian (Adel C)).symm G ≪≫ Functor.associator _ _ _
+
+lemma homologyLeftAbelien_comp_exact_naturality {G G': Adel C ⥤ A} [PreservesFiniteLimits G]
+    [PreservesFiniteColimits G] [PreservesFiniteLimits G'] [PreservesFiniteColimits G']
+    (α : G ⟶ G') :
+    whiskerRight (NatTrans.functorAdel α) (homologyLeftAbelian A) ≫
+    (homologyLeftAbelien_comp_exact G').hom = (homologyLeftAbelien_comp_exact G).hom ≫
+    whiskerLeft (homologyLeftAbelian (Adel C)) α := sorry
+
+noncomputable def liftAdel_unique (G : Adel C ⥤ A) [PreservesFiniteLimits G] [PreservesFiniteColimits G] :
+    (functor C ⋙ G).liftAdel ≅ G := by
+  refine isoWhiskerRight ((functor C).functorAdel_comp G).symm (homologyLeftAbelian A) ≪≫
+    Functor.associator _ _ _ ≪≫ isoWhiskerLeft ((functor C).functorAdel)
+    (homologyLeftAbelien_comp_exact G)
+    ≪≫ (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight (functor_homology_iso_id C) G ≪≫
+    G.leftUnitor
+
+lemma liftAdel_unique_naturality {G G': Adel C ⥤ A} [PreservesFiniteLimits G]
+    [PreservesFiniteColimits G] [PreservesFiniteLimits G'] [PreservesFiniteColimits G']
+    (α : G ⟶ G') :
+    whiskerRight (NatTrans.functorAdel (whiskerLeft (functor C) α)) (homologyLeftAbelian A) ≫
+    (liftAdel_unique G').hom = (liftAdel_unique G).hom ≫ α := by
+  dsimp [liftAdel_unique]
+  have : whiskerRight (NatTrans.functorAdel (whiskerLeft (functor C) α)) (homologyLeftAbelian A) ≫
+      whiskerRight ((functor C).functorAdel_comp G').inv (homologyLeftAbelian A) =
+      whiskerRight ((functor C).functorAdel_comp G).inv (homologyLeftAbelian A) ≫
+      whiskerRight (whiskerLeft (functor C).functorAdel (NatTrans.functorAdel α))
+      (homologyLeftAbelian A) := by
+    rw [← whiskerRight_comp, ← whiskerRight_comp]
+    congr 1
+
 
 end Compat
 
@@ -136,13 +183,15 @@ noncomputable def shrink : (Adel C ⥤ₑ A) ⥤ (C ⥤+ A) :=
 noncomputable def lift_shrink : lift C A ⋙ shrink C A ≅ 𝟭 (C ⥤+ A) := by
   refine NatIso.ofComponents (fun F ↦ ?_) (fun α ↦ ?_)
   · exact ObjectProperty.isoMk _ F.1.liftAdelIsLift
-  · apply (ObjectProperty.ι _).map_injective
-    dsimp [shrink, shrink_aux, lift, lift_aux]
-    exact liftAdelIsLift_naturality α
+  · exact (ObjectProperty.ι _).map_injective (liftAdelIsLift_naturality α)
+
+noncomputable def shrink_lift : shrink C A ⋙ lift C A ≅ 𝟭 (Adel C ⥤ₑ A) := by
+  refine NatIso.ofComponents (fun F ↦ ?_) (fun α ↦ ?_)
+  · exact ObjectProperty.isoMk _ (liftAdel_unique F.1)
+  · exact (ObjectProperty.ι _).map_injective (liftAdel_unique_naturality α)
 
 end Adel
 
 end TwoCat
-
 
 end CategoryTheory
