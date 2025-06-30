@@ -50,8 +50,9 @@ noncomputable def functor_mapComposableArrows : functor_aux C ⋙ F.mapComposabl
     · dsimp [functor_aux, functor_aux_complex]; simp
     · dsimp; change _ ≫ 0 = 0 ≫ _; simp
 
-noncomputable def functor_functorAdel : functor C ⋙ F.functorAdel ≅ F ⋙ functor D :=
-  Functor.associator _ _ _ ≪≫ isoWhiskerLeft (functor_aux C) (Quotient.lift.isLift _
+noncomputable def functor_functorAdel : functor C ⋙ F.functorAdel ≅ F ⋙ functor D := by
+  dsimp [Functor.functorAdel]
+  exact isoWhiskerLeft (functor_aux C) (Quotient.lift.isLift _
   (F.mapComposableArrows 2 ⋙ Adel.quotient D) (functorAdel_aux F)) ≪≫
   (Functor.associator _ _ _).symm ≪≫ isoWhiskerRight F.functor_mapComposableArrows (quotient D)
 
@@ -390,10 +391,41 @@ variable (α : F ⟶ F')
 lemma functor_mapComposableArrows :
     whiskerLeft (functor_aux C) ((whiskeringRight (Fin 3) C D).map α) ≫
     F'.functor_mapComposableArrows.hom = F.functor_mapComposableArrows.hom ≫
-    whiskerRight α (functor_aux D) := sorry
+    whiskerRight α (functor_aux D) := by
+  dsimp [Functor.functor_mapComposableArrows]
+  ext
+  · dsimp; simp
+  · dsimp [functor_aux, functor_aux_complex]; simp
+  · change _ ≫ 0 = 0 ≫ _; simp
 
 lemma functor_functorAdel_naturality : whiskerLeft (functor C) (NatTrans.functorAdel α) ≫
-    F'.functor_functorAdel.hom = F.functor_functorAdel.hom ≫ whiskerRight α (functor D) := sorry
+    F'.functor_functorAdel.hom = F.functor_functorAdel.hom ≫ whiskerRight α (functor D) := by
+  dsimp [Functor.functor_functorAdel]
+  have :  whiskerRight F.functor_mapComposableArrows.hom (quotient D) ≫
+      whiskerRight α (functor D) = whiskerRight (whiskerLeft (functor_aux C)
+      ((whiskeringRight (Fin 3) C D).map α)) (quotient D) ≫
+      whiskerRight F'.functor_mapComposableArrows.hom (quotient D) := by
+    rw [← whiskerRight_comp, functor_mapComposableArrows, whiskerRight_comp]
+    rfl
+  slice_rhs 3 4 => rw [this]
+  have : ((functor_aux C).associator (F.mapComposableArrows 2) (quotient D)).inv ≫
+      whiskerRight (whiskerLeft (functor_aux C) ((whiskeringRight (Fin 3) C D).map α))
+      (quotient D) = whiskerLeft (functor_aux C) (whiskerRight
+      ((whiskeringRight (Fin 3) C D).map α) (quotient D)) ≫ (Functor.associator _ _ _).inv := by
+    ext; simp
+  slice_rhs 2 3 => rw [this]
+  have : whiskerLeft (functor_aux C) (Quotient.lift.isLift Adel.homotopic (F.mapComposableArrows 2
+      ⋙ quotient D) (functorAdel_aux F)).hom ≫ whiskerLeft (functor_aux C) (whiskerRight
+      ((whiskeringRight (Fin 3) C D).map α) (quotient D)) = whiskerLeft (functor C)
+      (NatTrans.functorAdel α) ≫ whiskerLeft (functor_aux C)
+      (Quotient.lift.isLift Adel.homotopic (F'.mapComposableArrows 2 ⋙ quotient D)
+      (functorAdel_aux F')).hom := by
+    ext
+    dsimp [NatTrans.functorAdel, functor, quotient]
+    erw [id_comp, comp_id, comp_id, id_comp]
+  slice_rhs 1 2 => rw [this]
+  simp only [assoc]
+  rfl
 
 end Naturality
 
