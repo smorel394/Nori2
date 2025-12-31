@@ -107,21 +107,15 @@ noncomputable def candcoker_map_iso : candcoker ((F.mapComposableArrows 2).map u
       simp
       rfl
   · refine biprod.hom_ext' _ _ ?_ ?_
-    · simp only [mapComposableArrows_obj_obj, mapComposableArrows_obj_map,
-            mapComposableArrows_map_app, Iso.symm_hom,
-            biprod.uniqueUpToIso_inv, mapBinaryBicone_pt, mapBinaryBicone_inl,
-            BinaryBiproduct.bicone_inl, mapBinaryBicone_inr, BinaryBiproduct.bicone_inr,
-            biprod.inl_desc_assoc]
+    · dsimp
+      simp only [Fin.isValue, homOfLE_leOfHom, biprod.inl_desc_assoc]
       change biprod.inl ≫ biprod.map _ _ ≫ _ = _
       rw [biprod.inl_map_assoc, biprod.inl_desc, ← F.map_comp biprod.inl]
       change _ = F.map (_ ≫ biprod.map _ _)
       rw [biprod.inl_map]
       simp
-    · simp only [mapComposableArrows_obj_obj, mapComposableArrows_obj_map,
-            mapComposableArrows_map_app, Iso.symm_hom,
-            biprod.uniqueUpToIso_inv, mapBinaryBicone_pt, mapBinaryBicone_inl,
-            BinaryBiproduct.bicone_inl, mapBinaryBicone_inr, BinaryBiproduct.bicone_inr,
-            biprod.inr_desc_assoc]
+    · dsimp
+      simp only [Fin.isValue, homOfLE_leOfHom, biprod.inr_desc_assoc]
       change biprod.inr ≫ biprod.map _ _ ≫ _ = _
       rw [biprod.inr_map_assoc, biprod.inr_desc, ← F.map_comp biprod.inr]
       change _ = F.map (_ ≫ biprod.map _ _)
@@ -152,20 +146,10 @@ noncomputable def preservesCokernelsComposableArrows_aux :
       rw [← Functor.comp_obj, ← Functor.comp_obj]
       exact (Quotient.lift.isLift _ _ _).symm.app (candcoker u)
     · match j with
-      | .zero =>
-        dsimp [α]
-        simp only [id_comp, comp_id, map_comp]
-        have h₁ := (cocone_aux u).w WalkingParallelPairHom.right
-        simp only [comp_obj, parallelPair_obj_zero, const_obj_obj, parallelPair_obj_one,
-          comp_map, parallelPair_map_right, Functor.map_zero, zero_comp] at h₁
-        have h₂ := (cocone_aux ((F.mapComposableArrows 2).map u)).w WalkingParallelPairHom.right
-        simp only [comp_obj, parallelPair_obj_zero, const_obj_obj, parallelPair_obj_one,
-          comp_map, parallelPair_map_right, Functor.map_zero, zero_comp] at h₂
-        rw [← h₁, ← h₂]
-        simp
+      | .zero => dsimp [α]; simp
       | .one =>
         dsimp [α, compNatIso', cocone_aux, candπ, functorAdel]
-        simp only [comp_id, map_comp, Functor.map_id, id_comp]
+        simp only [Fin.isValue, homOfLE_leOfHom, id_comp, comp_id]
         rw [← (quotient D).map_comp]
         change _ = (quotient D).map _
         congr 1
@@ -207,16 +191,17 @@ noncomputable def candker_map_iso : candker ((F.mapComposableArrows 2).map u) �
       simp only [biprod.inr_map_assoc, biprod.inr_desc, id_comp, biprod.inr_desc_assoc]
       rw [← F.map_comp, biprod.inr_map, id_comp]
   · refine biprod.hom_ext' _ _ ?_ ?_
-    · simp only [mapComposableArrows_obj_obj, mapComposableArrows_obj_map,
-        mapComposableArrows_map_app, Iso.symm_hom, biprod.uniqueUpToIso_inv, mapBinaryBicone_pt,
-        mapBinaryBicone_inl, BinaryBiproduct.bicone_inl, mapBinaryBicone_inr,
-        BinaryBiproduct.bicone_inr, biprod.inl_desc_assoc]
+    · simp only [Nat.reduceAdd, Fin.mk_one, Fin.isValue, mapComposableArrows_obj_obj,
+      Fin.zero_eta, Fin.reduceFinMk, ComposableArrows.map', homOfLE_leOfHom,
+      mapComposableArrows_obj_map, Iso.symm_hom,
+      biprod.uniqueUpToIso_inv, mapBinaryBicone_pt, mapBinaryBicone_inl, BinaryBiproduct.bicone_inl,
+      mapBinaryBicone_inr, BinaryBiproduct.bicone_inr, biprod.inl_desc_assoc]
       change biprod.inl ≫ (biprod.map _ _  + _) ≫ _ = _ ≫ F.map (biprod.map _ _ + _)
-      simp only [mapComposableArrows_obj_obj, mapComposableArrows_obj_map,
-        mapComposableArrows_map_app, Preadditive.add_comp, assoc, biprod.inr_desc,
-        Preadditive.comp_add, biprod.inl_map_assoc, biprod.inl_desc,
-        BinaryBicone.inl_fst_assoc, map_add, map_comp]
-      rw [← F.map_comp biprod.inl, biprod.inl_map, ← F.map_comp (u.app one),
+      dsimp
+      simp only [Fin.isValue, homOfLE_leOfHom, Preadditive.add_comp, assoc, biprod.inr_desc,
+        Preadditive.comp_add, biprod.inl_map_assoc, biprod.inl_desc, BinaryBicone.inl_fst_assoc,
+        map_add, map_comp]
+      rw [← F.map_comp biprod.inl, biprod.inl_map, ← F.map_comp (u.app 1),
         ← F.map_comp biprod.fst, ← F.map_comp biprod.inl, biprod.inl_fst_assoc,
         F.map_comp (X.map' 1 2)]
     · change biprod.inr ≫ (biprod.map _ _ + _) ≫ _ = _
@@ -280,15 +265,7 @@ noncomputable def preservesKernelsComposableArrows_aux :
             ← F.map_comp, ← F.map_comp, assoc, assoc, biprod.inl_fst, comp_id]
           erw [biprod.inr_fst]
           simp
-      | .one =>
-        dsimp [α]
-        simp only [comp_id, map_comp]
-        have h₁ := (cone_aux ((F.mapComposableArrows 2).map u)).w WalkingParallelPairHom.right
-        have h₂ := (cone_aux u).w WalkingParallelPairHom.right
-        simp only [const_obj_obj, comp_obj, parallelPair_obj_one, parallelPair_obj_zero,
-          comp_map, parallelPair_map_right, Functor.map_zero, comp_zero] at h₁ h₂
-        rw [← h₁, ← h₂]
-        simp
+      | .one => dsimp [α]; simp
   exact IsLimit.ofIsoLimit ((IsLimit.postcomposeHomEquiv α.symm _).invFun (cone_isLimit _)) e
 
 def preservesKernelsComposableArrows : PreservesLimit (parallelPair ((quotient C).map u) 0)

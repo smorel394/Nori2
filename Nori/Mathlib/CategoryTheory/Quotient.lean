@@ -6,4 +6,4 @@ variable {C D : Type*} [Category C] [Category D] (r : HomRel C) {F G : Quotient 
   (τ : (functor r).comp F ⟶ (functor r).comp G)
 
 @[simp]
-lemma whiskerLeft_natTransLift : whiskerLeft (functor r) (natTransLift r τ) = τ := by aesop
+lemma whiskerLeft_natTransLift : (functor r).whiskerLeft (natTransLift r τ) = τ := by aesop

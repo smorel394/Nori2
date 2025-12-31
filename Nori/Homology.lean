@@ -139,12 +139,7 @@ noncomputable def contractLeft_functoriality :
     · dsimp [contractLeft]; simp
   · ext
     · rw [← cancel_mono (PreservesKernel.iso G _).hom, ← cancel_mono (kernel.ι _)]
-      dsimp [contractLeft]
-      simp only [assoc, Iso.inv_hom_id, comp_id, kernelIsoOfEq_hom_comp_ι, kernel.lift_ι,
-        PreservesKernel.iso_hom, kernelComparison_comp_ι]
-      conv_rhs => congr; rfl; congr; rfl
-                  rw [← G.map_comp, kernel.lift_ι, G.map_comp]
-      simp
+      dsimp [contractLeft]; simp
     · dsimp [contractLeft]; simp
     · dsimp [contractLeft]; simp
 
@@ -372,7 +367,7 @@ noncomputable def homologyNatIso : homologyLeft A ≅ homologyRight A := by
   refine NatIso.ofComponents
     (fun X ↦ asIso (ShortComplex.homologyMap ((contractNatTrans A).app X))) (fun f ↦ ?_)
   dsimp [homologyLeft, homologyRight]
-  simp [← ShortComplex.homologyMap_comp, comp_contractNatTrans, ← contractNatTrans_comp]
+  simp [← ShortComplex.homologyMap_comp]
 
 lemma homologyLeft_map_eq_of_homotopic (X Y : ComposableArrows A 2) (u v : X ⟶ Y)
     (h : homotopic u v) : (homologyLeft A).map u = (homologyLeft A).map v := by

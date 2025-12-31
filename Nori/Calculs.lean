@@ -47,7 +47,9 @@ noncomputable def contract₁_iso_candker (X : ComposableArrows C 2) : (contract
   · exact isoZeroBiprod (isZero_zero _)
   · dsimp [contract₁, functor_aux, functor_aux_complex]
     simp
-  · simp only [NatTrans.comp_app, id_eq, isoZeroBiprod_hom, isoBiprodZero_hom]
+  · simp only [Nat.reduceAdd, Fin.mk_one, Fin.isValue, Fin.zero_eta, Fin.reduceFinMk,
+    ComposableArrows.map', homOfLE_leOfHom, ComposableArrows.obj', isoZeroBiprod_hom,
+    isoBiprodZero_hom]
     change _ = _ ≫ (biprod.map _ _  + _)
     rw [Preadditive.comp_add, biprod.inl_map]
     erw [biprod.inl_fst_assoc]
@@ -266,7 +268,9 @@ noncomputable def cycles_iso_candker (X : ComposableArrows C 2) : (cycles C).obj
   · exact isoZeroBiprod (isZero_zero _)
   · dsimp [cycles, contract_g, contract₂, functor_aux, functor_aux_complex]
     simp
-  · simp only [NatTrans.comp_app, id_eq, isoZeroBiprod_hom, isoBiprodZero_hom]
+  · simp only [Nat.reduceAdd, Fin.mk_one, Fin.isValue, Fin.zero_eta, Fin.reduceFinMk,
+    ComposableArrows.map', homOfLE_leOfHom, ComposableArrows.obj', isoZeroBiprod_hom,
+    isoBiprodZero_hom]
     change _ = _ ≫ (biprod.map _ _  + _)
     rw [Preadditive.comp_add, biprod.inl_map]
     erw [biprod.inl_fst_assoc]

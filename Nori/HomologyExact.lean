@@ -185,13 +185,16 @@ noncomputable def preservesCokernels_aux : IsColimit ((homologyLeftAbelian A).ma
   | WalkingParallelPair.zero =>
     dsimp [α, compNatIso', cocone_aux]
     rw [← cancel_epi ((quotient_homologyLeftAbelian A).hom.app X)]
-    simp only [comp_obj, id_comp, comp_id, Iso.hom_inv_id_app_assoc]
+    simp only [Nat.reduceAdd, comp_obj, Fin.isValue, homOfLE_leOfHom, map_comp, comp_id,
+      Iso.hom_inv_id_app_assoc]
     conv_rhs => rw [← Functor.map_comp, ← (quotient_homologyLeftAbelian A).hom.naturality]
     convert (comp_id _).symm
+    simp
   | WalkingParallelPair.one =>
     dsimp [α, compNatIso', cocone_aux]
     rw [← cancel_epi ((quotient_homologyLeftAbelian A).hom.app Y)]
-    simp only [comp_obj, id_comp, comp_id, Iso.hom_inv_id_app_assoc]
+    simp only [Nat.reduceAdd, comp_obj, Fin.isValue, homOfLE_leOfHom, comp_id,
+      Iso.hom_inv_id_app_assoc]
     rw [← (quotient_homologyLeftAbelian A).hom.naturality]
     convert (comp_id _).symm
 
