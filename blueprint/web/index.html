@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  MathJax = { 
+    tex: {
+		    inlineMath: [['$','$'], ['\\(','\\)']]
+	} }
+</script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+<meta name="generator" content="plasTeX" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nori construction</title>
+<link rel="stylesheet" href="styles/theme-white.css" />
+<link rel="stylesheet" href="styles/extra_styles.css" />
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<div class="content">
+<div class="content-wrapper">
+
+
+<div class="main-text">
+<div class="titlepage">
+<h1>Nori construction</h1>
+<p class="authors">
+<span class="author">Sophie Morel</span>
+</p>
+</div>
+<p>The goal of this project is to prove Nori’s factorization theorem. </p>
+<p>Let \(Q\) be a quiver, \(\mathcal{A}\) be an abelian category and \(T:Q\to \mathcal{A}\) be a morphism of quivers. </p>
+<p><div class="definition_thmwrapper " id="a0000000002">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">1</span>
+  </div>
+  <div class="definition_thmcontent">
+  <p>A <em>factorization</em> of \(T\) is the data of an abelian category \(\mathcal{B}\), a morphism of quivers \(U::Q\to \mathcal{B}\), an exact functor \(R:\mathcal{B}\to \mathcal{A}\) and an isomorphism \(\alpha :R\circ U\stackrel{\sim }{\rightarrow }T\). </p>
+<p>If \((\mathcal{B}_1,U_1,R_1,\alpha _1)\) and \((\mathcal{B}_2,U_2,R_2,\alpha _2)\) are factorizations of \(T\), a <em>morphism of factorizations</em> is the data of an exact functor \(F:\mathcal{B}_1\to \mathcal{B}_2\) and isomorphisms \(\beta :F\circ U_1\stackrel{\sim }{\rightarrow }U_2\) and \(\gamma :R_2\circ F\stackrel{\sim }{\rightarrow }R_1\) such that the two isomorphisms \(R_2\circ F\circ U_1\stackrel{\gamma }{\longrightarrow } R_1\circ U_1\stackrel{\alpha _1}{\longrightarrow } T\) and \(R_2\circ F\circ U_1\stackrel{\beta }{\longrightarrow } R_2\circ U_2\stackrel{\alpha _2}{\longrightarrow } T\) are equal. </p>
+
+  </div>
+</div> </p>
+<p><div class="lemma_thmwrapper " id="a0000000003">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">2</span>
+  </div>
+  <div class="lemma_thmcontent">
+  <p>Factorizations of \(T\) form a category. </p>
+
+  </div>
+</div> </p>
+<p><div class="definition_thmwrapper " id="a0000000004">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">3</span>
+  </div>
+  <div class="definition_thmcontent">
+  <p>A <em>universal factorization</em> of \(T\) is an initial object of the category of factorizations of \(T\). </p>
+
+  </div>
+</div> </p>
+<p><div class="theorem_thmwrapper " id="a0000000005">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">4</span>
+    <span class="theorem_thmtitle">Nori</span>
+  </div>
+  <div class="theorem_thmcontent">
+  <p> There exists a universal factorization of \(T\). </p>
+
+  </div>
+</div> </p>
+<p>There are several proofs of this theorem, and the one we give is due to Barbieri-Viale and Prest. It uses the following result, which follows from the existence of Freyd’s free abelian category on a (pre)additive category. </p>
+<p><div class="theorem_thmwrapper " id="a0000000006">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">5</span>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>Let \(Q\) be a quiver. Then there exists an abelian category \(\mathcal{A}\) and a morphism of quivers \(T:Q\to \mathcal{A}\) such that, for every abelian category \(\mathcal{B}\), the functor \(F\mapsto F\circ T\) is an equivalence from the category of exact functors \(\mathcal{A}\to \mathcal{B}\) to the category of morphisms of quivers \(Q\to \mathcal{B}\). </p>
+
+  </div>
+</div> </p>
+
+</div> <!--main-text -->
+</div> <!-- content-wrapper -->
+</div> <!-- content -->
+</div> <!-- wrapper -->
+
+<nav class="prev_up_next">
+</nav>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/plastex.js"></script>
+<script type="text/javascript" src="js/svgxuse.js"></script>
+</body>
+</html>

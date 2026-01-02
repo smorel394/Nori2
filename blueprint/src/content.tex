@@ -5,3 +5,46 @@
 % If you want to split the blueprint content into several files then
 % the current file can be a simple sequence of \input. Otherwise It
 % can start with a \section or \chapter for instance.
+
+The goal of this project is to prove Nori's factorization theorem.
+
+Let \(Q\) be a quiver, \(\mathcal{A}\) be an abelian category and \(T:Q\to\mathcal{A}\) be a morphism
+of quivers.
+
+\begin{definition}
+    A \emph{factorization} of \(T\) is the data of an abelian category \(\mathcal{B}\),
+a morphism of quivers \(U::Q\to\mathcal{B}\), an exact functor \(R:\mathcal{B}\to\mathcal{A}\)
+and an isomorphism \(\alpha:R\circ U\iso T\). 
+
+If \((\mathcal{B}_1,U_1,R_1,\alpha_1)\) and
+\((\mathcal{B}_2,U_2,R_2,\alpha_2)\) are factorizations of \(T\), a \emph{morphism of factorizations}
+is the data of an exact functor \(F:\mathcal{B}_1\to\mathcal{B}_2\) and isomorphisms
+\(\beta:F\circ U_1\iso U_2\) and \(\gamma:R_2\circ F\iso R_1\) such that the two isomorphisms
+\(R_2\circ F\circ U_1\flnom{\gamma} R_1\circ U_1\flnom{\alpha_1} T\) and
+\(R_2\circ F\circ U_1\flnom{\beta} R_2\circ U_2\flnom{\alpha_2} T\) are equal.
+\end{definition}
+
+\begin{lemma}
+    Factorizations of \(T\) form a category.
+\end{lemma}
+
+\begin{definition}
+    A \emph{universal factorization} of \(T\) is an initial object of the category of factorizations
+of \(T\).
+\end{definition}
+
+\begin{theorem}[Nori]
+    There exists a universal factorization of \(T\). 
+\end{theorem}
+
+
+There are several proofs of this theorem, and the one we give is due to Barbieri-Viale and Prest. It uses the
+following result, which follows from the existence of Freyd's free abelian category on a (pre)additive
+category. 
+
+\begin{theorem}
+    Let \(Q\) be a quiver. Then there exists an abelian category \(\mathcal{A}\) and a morphism of quivers
+\(T:Q\to\mathcal{A}\) such that, for every abelian category \(\mathcal{B}\), the functor \(F\mapsto F\circ T\)
+is an equivalence from the category of exact functors \(\mathcal{A}\to\mathcal{B}\) to the category of morphisms of quivers
+\(Q\to\mathcal{B}\).
+\end{theorem}
