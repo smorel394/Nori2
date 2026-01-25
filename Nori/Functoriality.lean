@@ -149,15 +149,11 @@ noncomputable def preservesCokernelsComposableArrows_aux :
       | .zero => dsimp [α]; simp
       | .one =>
         dsimp [α, compNatIso', cocone_aux, candπ, functorAdel]
-        simp only [Fin.isValue, homOfLE_leOfHom, id_comp, comp_id]
+        simp only [Fin.isValue, id_comp, comp_id]
         rw [← (quotient D).map_comp]
         change _ = (quotient D).map _
         congr 1
-        ext
-        · dsimp; simp
-        · dsimp; simp
-        · simp only [mapComposableArrows_obj_obj, NatTrans.comp_app, mapComposableArrows_map_app,
-            ComposableArrows.homMk₂_app_two, biprod.inl_desc]
+        ext <;> dsimp <;> simp
   exact IsColimit.ofIsoColimit ((IsColimit.precomposeHomEquiv α _).invFun (cocone_isColimit _)) e
 
 def preservesCokernelsComposableArrows : PreservesColimit (parallelPair ((quotient C).map u) 0)
@@ -259,11 +255,10 @@ noncomputable def preservesKernelsComposableArrows_aux :
           simp
         · rw [← cancel_epi (F.mapBiprod _ _).hom]
           dsimp [candι]
-          erw [comp_id, ComposableArrows.homMk₂_app_two, ComposableArrows.homMk₂_app_two,
-            ComposableArrows.homMk₂_app_two, biprod.lift_fst]
-          rw [biprod.lift_desc_assoc, ← F.map_comp, ← F.map_comp, Preadditive.add_comp,
-            ← F.map_comp, ← F.map_comp, assoc, assoc, biprod.inl_fst, comp_id]
-          erw [biprod.inr_fst]
+          simp only [Fin.isValue, biprod.lift_fst_assoc, biprod.lift_desc_assoc,
+            Preadditive.add_comp, assoc]
+          erw [comp_id]
+          rw [← F.map_comp, biprod.inl_fst, F.map_id, ← F.map_comp]; erw [biprod.inr_fst]
           simp
       | .one => dsimp [α]; simp
   exact IsLimit.ofIsoLimit ((IsLimit.postcomposeHomEquiv α.symm _).invFun (cone_isLimit _)) e

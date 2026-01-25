@@ -268,6 +268,7 @@ lemma liftAdel_unique_naturality {G G': Adel C ⥤ A} [PreservesFiniteLimits G]
   slice_lhs 6 7 => rw [this]
   simp
 
+/-
 -- Is this true ?
 
 variable (F : C ⥤ A) [F.Additive]
@@ -307,7 +308,7 @@ lemma unique_vs_isLift : (liftAdel_unique F.liftAdel).hom =
               erw [Functor.map_id]; rfl; congr; erw [Functor.map_id]
   simp only [id_comp]
   sorry
-
+-/
 
 
 end Compat

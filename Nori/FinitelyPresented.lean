@@ -4,9 +4,8 @@ import Mathlib.CategoryTheory.ObjectProperty.ContainsZero
 import Mathlib.Algebra.Category.Grp.Zero
 import Mathlib.CategoryTheory.Abelian.DiagramLemmas.KernelCokernelComp
 import Nori.Mathlib.CategoryTheory.Limits.Shapes.Kernels
-import Nori.Mathlib.CategoryTheory.Preadditive.Yoneda.Basic
-import Nori.Mathlib.CategoryTheory.Limits.Shapes.Biproducts
-import Nori.Mathlib.CategoryTheory.Abelian.Subcategory
+import Mathlib.CategoryTheory.Preadditive.Yoneda.Limits
+import Mathlib.CategoryTheory.Limits.Shapes.Biproducts
 import Nori.AbelianLemmas
 
 noncomputable section
@@ -21,22 +20,21 @@ namespace Nori
 
 variable (C : Type u) [Category.{v} C]
 
-def IsFinitelyPresented : ObjectProperty (Cᵒᵖ ⥤ AddCommGrp.{v}) :=
-  fun X ↦ ∃ (A B : Cᵒᵖ ⥤ AddCommGrp.{v}) (u : A ⟶ X) (_ : Epi u) (v : B ⟶ kernel u) (_ : Epi v),
-  (A ⋙ forget AddCommGrp).IsRepresentable ∧ (B ⋙ forget AddCommGrp).IsRepresentable
+def IsFinitelyPresented : ObjectProperty (Cᵒᵖ ⥤ AddCommGrpCat.{v}) :=
+  fun X ↦ ∃ (A B : Cᵒᵖ ⥤ AddCommGrpCat.{v}) (u : A ⟶ X) (_ : Epi u) (v : B ⟶ kernel u) (_ : Epi v),
+  (A ⋙ forget AddCommGrpCat).IsRepresentable ∧ (B ⋙ forget AddCommGrpCat).IsRepresentable
 
 abbrev FinitelyPresented := (IsFinitelyPresented C).FullSubcategory
 
 variable {C}
 
-lemma isFinitelyPresented_iff_shortComplex_representable (X : Cᵒᵖ ⥤ AddCommGrp.{v}) :
-    IsFinitelyPresented C X ↔ ∃ (A B : Cᵒᵖ ⥤ AddCommGrp.{v}) (f : A ⟶ B)
-    (g : B ⟶ X) (_ : Epi g) (zero : f ≫ g = 0), (A ⋙ forget AddCommGrp).IsRepresentable ∧
-    (B ⋙ forget AddCommGrp).IsRepresentable ∧ (ShortComplex.mk f g zero).Exact := by
+lemma isFinitelyPresented_iff_shortComplex_representable (X : Cᵒᵖ ⥤ AddCommGrpCat.{v}) :
+    IsFinitelyPresented C X ↔ ∃ (A B : Cᵒᵖ ⥤ AddCommGrpCat.{v}) (f : A ⟶ B)
+    (g : B ⟶ X) (_ : Epi g) (zero : f ≫ g = 0), (A ⋙ forget AddCommGrpCat).IsRepresentable ∧
+    (B ⋙ forget AddCommGrpCat).IsRepresentable ∧ (ShortComplex.mk f g zero).Exact := by
   refine ⟨fun ⟨A, B, u, hu, v, hv, hA, hB⟩ ↦ ?_, fun ⟨A, B, f, g, hg, zero, hA, hB, h⟩ ↦ ?_⟩
   · use B, A, v ≫ kernel.ι u, u, hu
-    simp only [Functor.comp_obj, Functor.flip_obj_obj, assoc, kernel.condition, comp_zero,
-      exists_and_left, exists_true_left]
+    simp only [assoc, kernel.condition, comp_zero, exists_and_left, exists_true_left]
     refine ⟨hB, hA, ?_⟩
     rw [ShortComplex.exact_iff_epi_kernel_lift]
     dsimp
@@ -46,7 +44,7 @@ lemma isFinitelyPresented_iff_shortComplex_representable (X : Cᵒᵖ ⥤ AddCom
     rw [eq]
     exact hv
   · use B, A, g, hg, kernel.lift g f zero
-    simp only [Functor.comp_obj, Functor.flip_obj_obj, exists_and_left, exists_prop]
+    simp only [exists_and_left, exists_prop]
     refine ⟨hB, ?_, hA⟩
     rw [ShortComplex.exact_iff_epi_kernel_lift] at h
     exact h
@@ -61,22 +59,22 @@ section ZeroObject
 
 variable [HasZeroObject C]
 
-instance (X : Cᵒᵖ) : Unique (((0 : Cᵒᵖ ⥤ AddCommGrp.{w}) ⋙ forget AddCommGrp).obj X) := by
-  have : Unique ((forget AddCommGrp).obj (AddCommGrp.of PUnit.{w + 1})) := by
+instance (X : Cᵒᵖ) : Unique (((0 : Cᵒᵖ ⥤ AddCommGrpCat.{w}) ⋙ forget AddCommGrpCat).obj X) := by
+  have : Unique ((forget AddCommGrpCat).obj (AddCommGrpCat.of PUnit.{w + 1})) := by
     change Unique PUnit.{w + 1}
     infer_instance
-  exact Equiv.unique ((forget AddCommGrp).mapIso (IsZero.isoZero (Functor.zero_obj X))
-    ≪≫ ((forget AddCommGrp).mapIso (IsZero.isoZero (AddCommGrp.isZero_of_subsingleton
-      (AddCommGrp.of.{w} PUnit)))).symm).toEquiv
+  exact Equiv.unique ((forget AddCommGrpCat).mapIso (IsZero.isoZero (Functor.zero_obj X))
+    ≪≫ ((forget AddCommGrpCat).mapIso (IsZero.isoZero (AddCommGrpCat.isZero_of_subsingleton
+      (AddCommGrpCat.of.{w} PUnit)))).symm).toEquiv
 
-instance : ((0 : Cᵒᵖ ⥤ AddCommGrp.{v}) ⋙ forget AddCommGrp).IsRepresentable where
+instance : ((0 : Cᵒᵖ ⥤ AddCommGrpCat.{v}) ⋙ forget AddCommGrpCat).IsRepresentable where
   has_representation := by
     use 0
     exact Nonempty.intro
       {homEquiv := Equiv.ofUnique _ _, homEquiv_comp _ _ := Subsingleton.elim _ _}
 
-lemma IsFinitelyPresented_of_isRepresentable (X : Cᵒᵖ ⥤ AddCommGrp)
-    [(X ⋙ forget AddCommGrp).IsRepresentable] : IsFinitelyPresented C X := by
+lemma IsFinitelyPresented_of_isRepresentable (X : Cᵒᵖ ⥤ AddCommGrpCat)
+    [(X ⋙ forget AddCommGrpCat).IsRepresentable] : IsFinitelyPresented C X := by
   use X, 0, 𝟙 X, inferInstance, 0, IsZero.epi (IsZero.of_iso (isZero_zero _)
     (kernel.ofMono (𝟙 X))) _
   refine ⟨inferInstance, inferInstance⟩
@@ -91,7 +89,7 @@ section Additive
 
 variable [Preadditive C] [HasFiniteProducts C]
 
-instance {X : C} : (preadditiveYoneda.obj X ⋙ forget AddCommGrp).IsRepresentable :=
+instance {X : C} : (preadditiveYoneda.obj X ⋙ forget AddCommGrpCat).IsRepresentable :=
   Functor.instIsRepresentableObjOppositeTypeYoneda
 
 instance : HasFiniteBiproducts C where
@@ -99,24 +97,24 @@ instance : HasFiniteBiproducts C where
 
 instance : HasBinaryBiproducts C := hasBinaryBiproducts_of_finite_biproducts C
 
-lemma representableBy_zero {F : Cᵒᵖ ⥤ AddCommGrp.{v}} {Y : C}
-    (r : (F ⋙ forget AddCommGrp).RepresentableBy Y) (X : C) :
+lemma representableBy_zero {F : Cᵒᵖ ⥤ AddCommGrpCat.{v}} {Y : C}
+    (r : (F ⋙ forget AddCommGrpCat).RepresentableBy Y) (X : C) :
     r.homEquiv (X := X) 0 = 0 := by
   let π : X ⟶ 0 := 0
   have eq : (0 : X ⟶ Y) = π ≫ 0 := comp_zero.symm
   have eq' : r.homEquiv (X := 0) 0 = 0 := by
-    have : Subsingleton ((F ⋙ forget AddCommGrp).obj (op 0)) :=
+    have : Subsingleton ((F ⋙ forget AddCommGrpCat).obj (op 0)) :=
       Equiv.subsingleton (r.homEquiv (X := 0)).symm
     exact Subsingleton.elim _ _
   rw [eq, r.homEquiv_comp π 0, eq']
   simp only [Functor.comp_obj, Functor.comp_map, ConcreteCategory.forget_map_eq_coe, map_zero]
 
-lemma representableBy_sum {F : Cᵒᵖ ⥤ AddCommGrp.{v}} {Y : C}
-    (r : (F ⋙ forget AddCommGrp).RepresentableBy Y) {X : C} (f g : X ⟶ Y) :
+lemma representableBy_sum {F : Cᵒᵖ ⥤ AddCommGrpCat.{v}} {Y : C}
+    (r : (F ⋙ forget AddCommGrpCat).RepresentableBy Y) {X : C} (f g : X ⟶ Y) :
     r.homEquiv (f + g) = r.homEquiv f + r.homEquiv g := by
   have : ∀ (u v : F.obj (op (biprod X X))),
-      (F ⋙ forget AddCommGrp).map biprod.inl.op u = (F ⋙ forget AddCommGrp).map biprod.inl.op v →
-      (F ⋙ forget AddCommGrp).map biprod.inr.op u = (F ⋙ forget AddCommGrp).map biprod.inr.op v →
+      (F ⋙ forget AddCommGrpCat).map biprod.inl.op u = (F ⋙ forget AddCommGrpCat).map biprod.inl.op v →
+      (F ⋙ forget AddCommGrpCat).map biprod.inr.op u = (F ⋙ forget AddCommGrpCat).map biprod.inr.op v →
       u = v := by
     intro u v h₁ h₂
     apply r.homEquiv.symm.injective
@@ -135,8 +133,8 @@ lemma representableBy_sum {F : Cᵒᵖ ⥤ AddCommGrp.{v}} {Y : C}
     · rw [← r.homEquiv_comp biprod.inl]
       dsimp
       rw [biprod.inl_desc, map_add]
-      change _ = (F ⋙ forget AddCommGrp).map biprod.inl.op _ +
-        ((F ⋙ forget AddCommGrp).map) biprod.inl.op _
+      change _ = (F ⋙ forget AddCommGrpCat).map biprod.inl.op _ +
+        ((F ⋙ forget AddCommGrpCat).map) biprod.inl.op _
       conv_rhs => erw [← r.homEquiv_comp biprod.inl (biprod.desc f 0),
                     ← r.homEquiv_comp biprod.inl (biprod.desc 0 g)]
       rw [biprod.inl_desc, biprod.inl_desc, representableBy_zero, add_zero]
@@ -144,69 +142,69 @@ lemma representableBy_sum {F : Cᵒᵖ ⥤ AddCommGrp.{v}} {Y : C}
     · rw [← r.homEquiv_comp biprod.inr]
       dsimp
       rw [biprod.inr_desc, map_add]
-      change _ = (F ⋙ forget AddCommGrp).map biprod.inr.op _ +
-        ((F ⋙ forget AddCommGrp).map) biprod.inr.op _
+      change _ = (F ⋙ forget AddCommGrpCat).map biprod.inr.op _ +
+        ((F ⋙ forget AddCommGrpCat).map) biprod.inr.op _
       conv_rhs => erw [← r.homEquiv_comp biprod.inr (biprod.desc f 0),
                     ← r.homEquiv_comp biprod.inr (biprod.desc 0 g)]
       rw [biprod.inr_desc, biprod.inr_desc, representableBy_zero, zero_add]
       rfl
   rw [eq, r.homEquiv_comp, eq']
   simp only [Functor.comp_obj, Functor.comp_map, ConcreteCategory.forget_map_eq_coe, map_add]
-  change (F ⋙ forget AddCommGrp).map _ _ + ((F ⋙ forget AddCommGrp).map) _ _ = _
+  change (F ⋙ forget AddCommGrpCat).map _ _ + ((F ⋙ forget AddCommGrpCat).map) _ _ = _
   erw [← r.homEquiv_comp, ← r.homEquiv_comp, biprod.lift_desc, biprod.lift_desc, id_comp,
     comp_zero, add_zero, id_comp, zero_add]
   rfl
 
-def Functor.representableByEquivAdd {F : Cᵒᵖ ⥤ AddCommGrp.{v}} {Y : C} :
-    (F ⋙ forget AddCommGrp).RepresentableBy Y ≃ (preadditiveYoneda.obj Y ≅ F) where
+def Functor.representableByEquivAdd {F : Cᵒᵖ ⥤ AddCommGrpCat.{v}} {Y : C} :
+    (F ⋙ forget AddCommGrpCat).RepresentableBy Y ≃ (preadditiveYoneda.obj Y ≅ F) where
   toFun r := by
     refine NatIso.ofComponents (fun X ↦ AddEquiv.toAddCommGrpIso ?_) (fun f ↦ ?_)
     · dsimp
       refine {r.homEquiv (X := unop X) with map_add' := representableBy_sum r}
     · ext a
       exact r.homEquiv_comp f.unop a
-  invFun e := Functor.representableByEquiv.invFun (isoWhiskerRight e (forget AddCommGrp))
+  invFun e := Functor.representableByEquiv.invFun (Functor.isoWhiskerRight e (forget AddCommGrpCat))
   left_inv r := rfl
   right_inv e := rfl
 
-lemma Functor.representableByEquivAdd_forget {F : Cᵒᵖ ⥤ AddCommGrp.{v}} {Y : C}
-    (r : (F ⋙ forget AddCommGrp).RepresentableBy Y) :
-    isoWhiskerRight (Functor.representableByEquivAdd.toFun r) (forget AddCommGrp) =
+lemma Functor.representableByEquivAdd_forget {F : Cᵒᵖ ⥤ AddCommGrpCat.{v}} {Y : C}
+    (r : (F ⋙ forget AddCommGrpCat).RepresentableBy Y) :
+    Functor.isoWhiskerRight (Functor.representableByEquivAdd.toFun r) (forget AddCommGrpCat) =
     Functor.representableByEquiv.toFun r := by aesop
 
 section Presentation
 
-def IsFinitelyPresented.presentation_A {X : Cᵒᵖ ⥤ AddCommGrp} (hX : IsFinitelyPresented C X) :
+def IsFinitelyPresented.presentation_A {X : Cᵒᵖ ⥤ AddCommGrpCat} (hX : IsFinitelyPresented C X) :
     C := by
   have h := (isFinitelyPresented_iff_shortComplex_representable X).mp hX
   have := h.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.1
-  exact (h.choose ⋙ forget AddCommGrp).reprX
+  exact (h.choose ⋙ forget AddCommGrpCat).reprX
 
-def IsFinitelyPresented.presentation_B {X : Cᵒᵖ ⥤ AddCommGrp} (hX : IsFinitelyPresented C X) :
+def IsFinitelyPresented.presentation_B {X : Cᵒᵖ ⥤ AddCommGrpCat} (hX : IsFinitelyPresented C X) :
     C := by
   have h := (isFinitelyPresented_iff_shortComplex_representable X).mp hX
   have := h.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.2.1
-  exact (h.choose_spec.choose ⋙ forget AddCommGrp).reprX
+  exact (h.choose_spec.choose ⋙ forget AddCommGrpCat).reprX
 
-def IsFinitelyPresented.presentation_map_f {X : Cᵒᵖ ⥤ AddCommGrp} (hX : IsFinitelyPresented C X) :
+def IsFinitelyPresented.presentation_map_f {X : Cᵒᵖ ⥤ AddCommGrpCat} (hX : IsFinitelyPresented C X) :
     hX.presentation_A ⟶ hX.presentation_B := by
   have h := (isFinitelyPresented_iff_shortComplex_representable X).mp hX
   have := h.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.1
   have := h.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.2.1
   set f := h.choose_spec.choose_spec.choose
-  set fA := Functor.representableByEquivAdd (h.choose ⋙ forget AddCommGrp).representableBy
+  set fA := Functor.representableByEquivAdd (h.choose ⋙ forget AddCommGrpCat).representableBy
   set fB := Functor.representableByEquivAdd (h.choose_spec.choose ⋙
-    forget AddCommGrp).representableBy
+    forget AddCommGrpCat).representableBy
   exact preadditiveYoneda.preimage (fA.hom ≫ f ≫ fB.inv)
 
-def IsFinitelyPresented.presentation_map_p {X : Cᵒᵖ ⥤ AddCommGrp} (hX : IsFinitelyPresented C X) :
+def IsFinitelyPresented.presentation_map_p {X : Cᵒᵖ ⥤ AddCommGrpCat} (hX : IsFinitelyPresented C X) :
     preadditiveYoneda.obj hX.presentation_B ⟶ X := by
   have h := (isFinitelyPresented_iff_shortComplex_representable X).mp hX
   have := h.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.2.1
   exact (Functor.representableByEquivAdd (h.choose_spec.choose ⋙
-    forget AddCommGrp).representableBy).hom ≫ h.choose_spec.choose_spec.choose_spec.choose
+    forget AddCommGrpCat).representableBy).hom ≫ h.choose_spec.choose_spec.choose_spec.choose
 
-lemma IsFinitelyPresented.presentation_map_f_p {X : Cᵒᵖ ⥤ AddCommGrp}
+lemma IsFinitelyPresented.presentation_map_f_p {X : Cᵒᵖ ⥤ AddCommGrpCat}
     (hX : IsFinitelyPresented C X) :
     preadditiveYoneda.map hX.presentation_map_f ≫ hX.presentation_map_p = 0 := by
   have h := (isFinitelyPresented_iff_shortComplex_representable X).mp hX
@@ -215,7 +213,7 @@ lemma IsFinitelyPresented.presentation_map_f_p {X : Cᵒᵖ ⥤ AddCommGrp}
   simp only [assoc, Iso.inv_hom_id_assoc, Preadditive.IsIso.comp_left_eq_zero]
   exact h.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.choose
 
-def IsFinitelyPresented.presentation_cokernel {X : Cᵒᵖ ⥤ AddCommGrp.{v}}
+def IsFinitelyPresented.presentation_cokernel {X : Cᵒᵖ ⥤ AddCommGrpCat.{v}}
     (hX : IsFinitelyPresented C X) :
     IsColimit (CokernelCofork.ofπ hX.presentation_map_p hX.presentation_map_f_p) := by
   have h := (isFinitelyPresented_iff_shortComplex_representable X).mp hX
@@ -223,9 +221,9 @@ def IsFinitelyPresented.presentation_cokernel {X : Cᵒᵖ ⥤ AddCommGrp.{v}}
   have := h.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.2.1
   have : Epi h.choose_spec.choose_spec.choose_spec.choose :=
     h.choose_spec.choose_spec.choose_spec.choose_spec.choose
-  set fA := Functor.representableByEquivAdd (h.choose ⋙ forget AddCommGrp).representableBy
+  set fA := Functor.representableByEquivAdd (h.choose ⋙ forget AddCommGrpCat).representableBy
   set fB := Functor.representableByEquivAdd (h.choose_spec.choose ⋙
-    forget AddCommGrp).representableBy
+    forget AddCommGrpCat).representableBy
   have := h.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec.2.2.gIsCokernel
   refine (IsColimit.equivOfNatIsoOfIso ?_ _ _ ?_).toFun this
   · refine NatIso.ofComponents ?_ ?_
@@ -257,49 +255,49 @@ def IsFinitelyPresented.presentation_cokernel {X : Cᵒᵖ ⥤ AddCommGrp.{v}}
       rw [comp_id]
       rfl
 
-instance {X : Cᵒᵖ ⥤ AddCommGrp.{v}} (hX : IsFinitelyPresented C X) :
+instance {X : Cᵒᵖ ⥤ AddCommGrpCat.{v}} (hX : IsFinitelyPresented C X) :
     Epi hX.presentation_map_p := epi_of_isColimit_cofork hX.presentation_cokernel
 
-def IsFinitelyPresented.presentation_iso {X : Cᵒᵖ ⥤ AddCommGrp} (hX : IsFinitelyPresented C X) :
+def IsFinitelyPresented.presentation_iso {X : Cᵒᵖ ⥤ AddCommGrpCat} (hX : IsFinitelyPresented C X) :
     X ≅ cokernel (preadditiveYoneda.map (hX.presentation_map_f)) :=
   hX.presentation_cokernel.coconePointUniqueUpToIso (colimit.isColimit (parallelPair
     (preadditiveYoneda.map (hX.presentation_map_f)) 0))
 
 end Presentation
 
-lemma IsRepresentable_proj (A B X : Cᵒᵖ ⥤ AddCommGrp.{v}) [(A ⋙ forget AddCommGrp).IsRepresentable]
-    [(B ⋙ forget AddCommGrp).IsRepresentable] (f : A ⟶ X) (g : B ⟶ X) [Epi g] :
+lemma IsRepresentable_proj (A B X : Cᵒᵖ ⥤ AddCommGrpCat.{v}) [(A ⋙ forget AddCommGrpCat).IsRepresentable]
+    [(B ⋙ forget AddCommGrpCat).IsRepresentable] (f : A ⟶ X) (g : B ⟶ X) [Epi g] :
     ∃ (h : A ⟶ B), f = h ≫ g := by
-  set eA := Functor.representableByEquiv.toFun (A ⋙ forget AddCommGrp).representableBy
-  set eB := Functor.representableByEquiv.toFun (B ⋙ forget AddCommGrp).representableBy
-  set fA := Functor.representableByEquivAdd.toFun (A ⋙ forget AddCommGrp).representableBy
-  set fB := Functor.representableByEquivAdd.toFun (B ⋙ forget AddCommGrp).representableBy
-  have : Epi (g.app ((op (A ⋙ forget AddCommGrp).reprX))) := inferInstance
-  rw [AddCommGrp.epi_iff_surjective] at this
-  obtain ⟨x, hx⟩ := this (yonedaEquiv (eA.hom ≫ whiskerRight f (forget AddCommGrp)))
-  set h' : A ⋙ forget AddCommGrp ⟶ B ⋙ forget AddCommGrp := eA.inv ≫ yonedaEquiv.invFun x
-  have eq : h' ≫  whiskerRight g (forget AddCommGrp) = whiskerRight f (forget AddCommGrp) := by
+  set eA := Functor.representableByEquiv.toFun (A ⋙ forget AddCommGrpCat).representableBy
+  set eB := Functor.representableByEquiv.toFun (B ⋙ forget AddCommGrpCat).representableBy
+  set fA := Functor.representableByEquivAdd.toFun (A ⋙ forget AddCommGrpCat).representableBy
+  set fB := Functor.representableByEquivAdd.toFun (B ⋙ forget AddCommGrpCat).representableBy
+  have : Epi (g.app ((op (A ⋙ forget AddCommGrpCat).reprX))) := inferInstance
+  rw [AddCommGrpCat.epi_iff_surjective] at this
+  obtain ⟨x, hx⟩ := this (yonedaEquiv (eA.hom ≫ Functor.whiskerRight f (forget AddCommGrpCat)))
+  set h' : A ⋙ forget AddCommGrpCat ⟶ B ⋙ forget AddCommGrpCat := eA.inv ≫ yonedaEquiv.invFun x
+  have eq : h' ≫  Functor.whiskerRight g (forget AddCommGrpCat) = Functor.whiskerRight f (forget AddCommGrpCat) := by
     dsimp [h']
     rw [← cancel_epi eA.hom, ← assoc, ← assoc, Iso.hom_inv_id, id_comp]
     apply yonedaEquiv.injective
     rw [yonedaEquiv_comp]; erw [Equiv.apply_symm_apply]
-    simp only [Functor.comp_obj, whiskerRight_app, ConcreteCategory.forget_map_eq_coe, h']
+    simp only [Functor.comp_obj, Functor.whiskerRight_app, ConcreteCategory.forget_map_eq_coe]
     rw [hx]
     rfl
   set h := fA.inv ≫ preadditiveYoneda.map ((eB.symm.app
-    (op (A ⋙ forget AddCommGrp).reprX)).toEquiv x) ≫ fB.hom
-  have eqA : eA = isoWhiskerRight fA (forget AddCommGrp) :=
+    (op (A ⋙ forget AddCommGrpCat).reprX)).toEquiv x) ≫ fB.hom
+  have eqA : eA = Functor.isoWhiskerRight fA (forget AddCommGrpCat) :=
     (Functor.representableByEquivAdd_forget _).symm
-  have eqB : eB = isoWhiskerRight fB (forget AddCommGrp) :=
+  have eqB : eB = Functor.isoWhiskerRight fB (forget AddCommGrpCat) :=
     (Functor.representableByEquivAdd_forget _).symm
-  have eq' : whiskerRight h (forget AddCommGrp) = h' := by
-    have eqx : (yonedaEquiv (F := B ⋙ forget AddCommGrp)).symm x =
-        yoneda.map ((eB.symm.app (op (A ⋙ forget AddCommGrp).reprX)).toEquiv x) ≫ eB.hom := by
+  have eq' : Functor.whiskerRight h (forget AddCommGrpCat) = h' := by
+    have eqx : (yonedaEquiv (F := B ⋙ forget AddCommGrpCat)).symm x =
+        yoneda.map ((eB.symm.app (op (A ⋙ forget AddCommGrpCat).reprX)).toEquiv x) ≫ eB.hom := by
       ext
       dsimp [eB]
       erw [yonedaEquiv_symm_app_apply]
       simp [Functor.representableByEquiv]
-      erw [(B ⋙ forget AddCommGrp).representableBy.homEquiv_comp, Equiv.apply_symm_apply]
+      erw [(B ⋙ forget AddCommGrpCat).representableBy.homEquiv_comp, Equiv.apply_symm_apply]
       rfl
     dsimp [h', h]
     conv_rhs => erw [eqx]
@@ -307,9 +305,9 @@ lemma IsRepresentable_proj (A B X : Cᵒᵖ ⥤ AddCommGrp.{v}) [(A ⋙ forget A
     rfl
   use h
   ext1; ext1 Y
-  apply (forget AddCommGrp).map_injective
-  rw [NatTrans.comp_app, (forget AddCommGrp).map_comp, ← whiskerRight_app h, eq',
-    ← whiskerRight_app g, ← NatTrans.comp_app, eq, whiskerRight_app]
+  apply (forget AddCommGrpCat).map_injective
+  rw [NatTrans.comp_app, (forget AddCommGrpCat).map_comp, ← Functor.whiskerRight_app h, eq',
+    ← Functor.whiskerRight_app g, ← NatTrans.comp_app, eq, Functor.whiskerRight_app]
 
 end Additive
 
@@ -317,31 +315,33 @@ section FiniteProducts
 
 variable [Preadditive C] [HasFiniteProducts C]
 
-instance (n : ℕ) (c : Fin n → (Cᵒᵖ ⥤ AddCommGrp.{v}))
-    [∀ i, (c i ⋙ forget AddCommGrp).IsRepresentable] :
-    (biproduct c ⋙ forget AddCommGrp).IsRepresentable where
-  has_representation := ⟨biproduct (fun i ↦ (c i ⋙ forget AddCommGrp).reprX),
+instance : PreservesFiniteBiproducts (preadditiveYoneda (C := C)) := sorry
+
+instance (n : ℕ) (c : Fin n → (Cᵒᵖ ⥤ AddCommGrpCat.{v}))
+    [∀ i, (c i ⋙ forget AddCommGrpCat).IsRepresentable] :
+    (biproduct c ⋙ forget AddCommGrpCat).IsRepresentable where
+  has_representation := ⟨biproduct (fun i ↦ (c i ⋙ forget AddCommGrpCat).reprX),
      Nonempty.intro (Functor.representableByEquivAdd.invFun (biproduct.uniqueUpToIso _
      (isBilimitOfPreserves (preadditiveYoneda (C := C)) (biproduct.isBilimit _)) ≪≫
      biproduct.mapIso (fun i ↦ Functor.representableByEquivAdd.toFun
-    (c i ⋙ forget AddCommGrp).representableBy)))⟩
+    (c i ⋙ forget AddCommGrpCat).representableBy)))⟩
 
-lemma IsRepresentable_isClosedUnderBinaryBiproduct (A B : Cᵒᵖ ⥤ AddCommGrp.{v})
-    (hc : (A ⋙ forget AddCommGrp).IsRepresentable) (hB : (B ⋙ forget AddCommGrp).IsRepresentable) :
-    (biprod A B ⋙ forget AddCommGrp).IsRepresentable where
+lemma IsRepresentable_isClosedUnderBinaryBiproduct (A B : Cᵒᵖ ⥤ AddCommGrpCat.{v})
+    (hc : (A ⋙ forget AddCommGrpCat).IsRepresentable) (hB : (B ⋙ forget AddCommGrpCat).IsRepresentable) :
+    (biprod A B ⋙ forget AddCommGrpCat).IsRepresentable where
   has_representation :=
     have := preservesBinaryBiproduct_of_preservesBiproduct (preadditiveYoneda (C := C))
-    ⟨biprod (A ⋙ forget AddCommGrp).reprX (B ⋙ forget AddCommGrp).reprX, Nonempty.intro
+    ⟨biprod (A ⋙ forget AddCommGrpCat).reprX (B ⋙ forget AddCommGrpCat).reprX, Nonempty.intro
     ((Functor.representableByEquivAdd.invFun (biprod.uniqueUpToIso _ _ (isBinaryBilimitOfPreserves
-    (preadditiveYoneda (C := C)) ((BinaryBiproduct.isBilimit (A ⋙ forget AddCommGrp).reprX
-    (B ⋙ forget AddCommGrp).reprX))) ≪≫ biprod.mapIso (Functor.representableByEquivAdd.toFun
-    (A ⋙ forget AddCommGrp).representableBy) (Functor.representableByEquivAdd.toFun
-    (B ⋙ forget AddCommGrp).representableBy))))⟩
+    (preadditiveYoneda (C := C)) ((BinaryBiproduct.isBilimit (A ⋙ forget AddCommGrpCat).reprX
+    (B ⋙ forget AddCommGrpCat).reprX))) ≪≫ biprod.mapIso (Functor.representableByEquivAdd.toFun
+    (A ⋙ forget AddCommGrpCat).representableBy) (Functor.representableByEquivAdd.toFun
+    (B ⋙ forget AddCommGrpCat).representableBy))))⟩
 
-def biproduct.KernelOfMap (n : ℕ) (A : Fin n → ((Cᵒᵖ ⥤ AddCommGrp.{v})))
-    (B : Fin n → ((Cᵒᵖ ⥤ AddCommGrp.{v}))) (u : (i : Fin n) → (A i ⟶ B i)) :
+def biproduct.KernelOfMap (n : ℕ) (A : Fin n → ((Cᵒᵖ ⥤ AddCommGrpCat.{v})))
+    (B : Fin n → ((Cᵒᵖ ⥤ AddCommGrpCat.{v}))) (u : (i : Fin n) → (A i ⟶ B i)) :
     IsLimit (KernelFork.ofι (f := biproduct.map u) (biproduct.map (fun i ↦ kernel.ι (u i)))
-    (by rw [← biproduct.map_comp]; simp only [Functor.comp_obj, Functor.flip_obj_obj, kernel.condition]; exact biproduct.map_zero)) where
+    (by simp [biproduct.hom_ext_iff])) where
   lift s := by
     refine biproduct.lift (fun i ↦ kernel.lift (u i) (Fork.ι s ≫ biproduct.π A i) ?_)
     have := biproduct.hom_ext_iff.mp (KernelFork.condition s) i
@@ -376,20 +376,25 @@ def biproduct.KernelOfMap (n : ℕ) (A : Fin n → ((Cᵒᵖ ⥤ AddCommGrp.{v})
     simp only [assoc, biproduct.map_π] at this
     exact this
 
-def biproduct.map_kernel (n : ℕ) (A : Fin n → ((Cᵒᵖ ⥤ AddCommGrp.{v})))
-    (B : Fin n → ((Cᵒᵖ ⥤ AddCommGrp.{v}))) (u : (i : Fin n) → (A i ⟶ B i)) :
+def biproduct.map_kernel (n : ℕ) (A : Fin n → ((Cᵒᵖ ⥤ AddCommGrpCat.{v})))
+    (B : Fin n → ((Cᵒᵖ ⥤ AddCommGrpCat.{v}))) (u : (i : Fin n) → (A i ⟶ B i)) :
     biproduct (fun i ↦ kernel (u i)) ≅ kernel (biproduct.map u) := by
   set e := IsLimit.conePointUniqueUpToIso (biproduct.KernelOfMap n A B u) (kernelIsKernel (biproduct.map u))
   exact e
 
-lemma IsFinitelyPresented_isClosedUnderFiniteBiproduct (n : ℕ) (c : Fin n → ((Cᵒᵖ ⥤ AddCommGrp.{v})))
+lemma IsFinitelyPresented_isClosedUnderFiniteBiproduct (n : ℕ) (c : Fin n → ((Cᵒᵖ ⥤ AddCommGrpCat.{v})))
     (hc : ∀ (i : Fin n), IsFinitelyPresented C (c i)) : IsFinitelyPresented C (biproduct c) := by
   choose A B u hu v hv Arep Brep using hc
-  have : (biproduct A ⋙ forget AddCommGrp).IsRepresentable := inferInstance
-  have : (biproduct B ⋙ forget AddCommGrp).IsRepresentable := inferInstance
+  have : (biproduct A ⋙ forget AddCommGrpCat).IsRepresentable := inferInstance
+  have : (biproduct B ⋙ forget AddCommGrpCat).IsRepresentable := inferInstance
   use biproduct A, biproduct B, biproduct.map u, biproduct.map_epi u
   have := biproduct.map_epi v
   use biproduct.map v ≫ (biproduct.map_kernel n _ _ u).hom, inferInstance
+
+-- The rest uses an out-of-date file.
+
+
+#exit
 
 instance : (IsFinitelyPresented C).ContainsFiniteProducts where
   contains_product n c := by
@@ -411,10 +416,10 @@ instance : (IsFinitelyPresented C).ContainsFiniteProducts where
 
 instance : HasBinaryBiproducts (FinitelyPresented C) := hasBinaryBiproducts_of_finite_biproducts _
 
-lemma finitelyPresented_presentation (X : FinitelyPresented C) (B : Cᵒᵖ ⥤ AddCommGrp.{v})
-    [(B ⋙ forget AddCommGrp).IsRepresentable] (g : B ⟶ X.1) [Epi g] :
-    ∃ (A : Cᵒᵖ ⥤ AddCommGrp.{v}) (f : A ⟶ kernel g) (_ : Epi f),
-    (A ⋙ forget AddCommGrp).IsRepresentable := by
+lemma finitelyPresented_presentation (X : FinitelyPresented C) (B : Cᵒᵖ ⥤ AddCommGrpCat.{v})
+    [(B ⋙ forget AddCommGrpCat).IsRepresentable] (g : B ⟶ X.1) [Epi g] :
+    ∃ (A : Cᵒᵖ ⥤ AddCommGrpCat.{v}) (f : A ⟶ kernel g) (_ : Epi f),
+    (A ⋙ forget AddCommGrpCat).IsRepresentable := by
   obtain ⟨A', B', f', g', _, zero, hA', hB', exact⟩ :=
     (isFinitelyPresented_iff_shortComplex_representable X.1).mp X.2
   obtain ⟨h, comm₁⟩ := IsRepresentable_proj B B' X.1 g g'
@@ -458,17 +463,17 @@ instance : (IsFinitelyPresented C).ContainsCokernels where
     obtain ⟨A', B', f', g', _, zero', hA', hB', exact'⟩ :=
       (isFinitelyPresented_iff_shortComplex_representable K'.1).mp K'.2
     obtain ⟨v, comm⟩ := IsRepresentable_proj B B' K'.1 (g ≫ u) g'
-    set L : Cᵒᵖ ⥤ AddCommGrp := cokernel u
+    set L : Cᵒᵖ ⥤ AddCommGrpCat := cokernel u
     have hL : IsFinitelyPresented C L := by
       rw [isFinitelyPresented_iff_shortComplex_representable]
       set S := coker_sequence g (ShortComplex.mk f' g' zero') v u comm
       use S.X₁, S.X₂, S.f, S.g, inferInstance, S.zero
       refine ⟨?_, hB', coker_sequence_exact g _ exact' v u comm ⟩
       exact IsRepresentable_isClosedUnderBinaryBiproduct B A' hB hA'
-    refine ⟨CokernelCofork.ofπ (f := u) (Z := ⟨L, hL⟩) (cokernel.π u (C := Cᵒᵖ ⥤ AddCommGrp))
-      (cokernel.condition u (C := Cᵒᵖ ⥤ AddCommGrp)),
+    refine ⟨CokernelCofork.ofπ (f := u) (Z := ⟨L, hL⟩) (cokernel.π u (C := Cᵒᵖ ⥤ AddCommGrpCat))
+      (cokernel.condition u (C := Cᵒᵖ ⥤ AddCommGrpCat)),
       Nonempty.intro {desc s := ?_, fac s j := ?_, uniq s m hm := ?_}⟩
-    · refine cokernel.desc u (s.ι.app WalkingParallelPair.one) ?_ (C := Cᵒᵖ ⥤ AddCommGrp)
+    · refine cokernel.desc u (s.ι.app WalkingParallelPair.one) ?_ (C := Cᵒᵖ ⥤ AddCommGrpCat)
       erw [s.ι.naturality WalkingParallelPairHom.left]
       dsimp
       have := s.ι.naturality WalkingParallelPairHom.right
@@ -478,7 +483,7 @@ instance : (IsFinitelyPresented C).ContainsCokernels where
     · match j with
       | WalkingParallelPair.zero =>
         dsimp
-        erw [cokernel.condition u (C := Cᵒᵖ ⥤ AddCommGrp)]
+        erw [cokernel.condition u (C := Cᵒᵖ ⥤ AddCommGrpCat)]
         have := s.ι.naturality WalkingParallelPairHom.right
         dsimp at this
         simp only [zero_comp, comp_id] at this
@@ -486,7 +491,7 @@ instance : (IsFinitelyPresented C).ContainsCokernels where
       | WalkingParallelPair.one =>
         dsimp
         simp
-    · rw [← cancel_epi (cokernel.π u (C := Cᵒᵖ ⥤ AddCommGrp))]
+    · rw [← cancel_epi (cokernel.π u (C := Cᵒᵖ ⥤ AddCommGrpCat))]
       simp only [coequalizer_as_cokernel, cokernel.π_desc]
       exact hm WalkingParallelPair.one
 
@@ -498,8 +503,8 @@ instance : (IsFinitelyPresented C).ι.PreservesEpimorphisms where
     (IsZero.of_iso (isZero_zero _) (cokernel.ofEpi f)))
     (PreservesCokernel.iso (IsFinitelyPresented C).ι f).symm) _)))
 
-lemma isFinitelyPresented_of_shortComplex_finitelyPresented (X : Cᵒᵖ ⥤ AddCommGrp.{v})
-    (A B : Cᵒᵖ ⥤ AddCommGrp.{v}) (f : A ⟶ B) (g : B ⟶ X) [Epi g] (zero : f ≫ g = 0)
+lemma isFinitelyPresented_of_shortComplex_finitelyPresented (X : Cᵒᵖ ⥤ AddCommGrpCat.{v})
+    (A B : Cᵒᵖ ⥤ AddCommGrpCat.{v}) (f : A ⟶ B) (g : B ⟶ X) [Epi g] (zero : f ≫ g = 0)
     (hA : IsFinitelyPresented C A) (hB : IsFinitelyPresented C B)
     (he : (ShortComplex.mk f g zero).Exact) : IsFinitelyPresented C X :=
   (IsFinitelyPresented C).prop_of_iso (PreservesCokernel.iso (IsFinitelyPresented C).ι f
@@ -545,11 +550,11 @@ section Kernels
 
 variable [Preadditive C] [HasPseudokernels C] [HasFiniteProducts C]
 
-lemma kernelIsRepresentable (A B : Cᵒᵖ ⥤ AddCommGrp.{v}) [(A ⋙ forget AddCommGrp).IsRepresentable]
-    [(B ⋙ forget AddCommGrp).IsRepresentable] (f : A ⟶ B) :
-    (kernel f ⋙ forget AddCommGrp).IsRepresentable := by
-  set fA := Functor.representableByEquivAdd.toFun (A ⋙ forget AddCommGrp).representableBy
-  set fB := Functor.representableByEquivAdd.toFun (B ⋙ forget AddCommGrp).representableBy
+lemma kernelIsRepresentable (A B : Cᵒᵖ ⥤ AddCommGrpCat.{v}) [(A ⋙ forget AddCommGrpCat).IsRepresentable]
+    [(B ⋙ forget AddCommGrpCat).IsRepresentable] (f : A ⟶ B) :
+    (kernel f ⋙ forget AddCommGrpCat).IsRepresentable := by
+  set fA := Functor.representableByEquivAdd.toFun (A ⋙ forget AddCommGrpCat).representableBy
+  set fB := Functor.representableByEquivAdd.toFun (B ⋙ forget AddCommGrpCat).representableBy
   obtain ⟨u, hu⟩ := preadditiveYoneda.map_surjective (fA.hom ≫ f ≫ fB.inv)
   refine Functor.RepresentableBy.isRepresentable (Y := pseudokernel u)
     (Functor.representableByEquivAdd.invFun ?_)
@@ -563,27 +568,27 @@ lemma kernelIsRepresentable (A B : Cᵒᵖ ⥤ AddCommGrp.{v}) [(A ⋙ forget Ad
     (Arrow.isoMk fA fB (by dsimp; rw [hu, assoc, assoc, Iso.inv_hom_id, comp_id]))
 
 lemma isFinitelyPresented_kernel_epi_representable_to_finitelyPresented (X : FinitelyPresented C)
-    (A' : Cᵒᵖ ⥤ AddCommGrp.{v}) [(A' ⋙ forget AddCommGrp).IsRepresentable] (f : A' ⟶ X.1) [Epi f] :
+    (A' : Cᵒᵖ ⥤ AddCommGrpCat.{v}) [(A' ⋙ forget AddCommGrpCat).IsRepresentable] (f : A' ⟶ X.1) [Epi f] :
     IsFinitelyPresented C (kernel f) := by
   rw [isFinitelyPresented_iff_shortComplex_representable]
   obtain ⟨A, g, _, hA⟩ := finitelyPresented_presentation  X A' f
-  have hB : (kernel g ⋙ forget AddCommGrp).IsRepresentable := by
+  have hB : (kernel g ⋙ forget AddCommGrpCat).IsRepresentable := by
     have := kernelIsRepresentable A A' (g ≫ kernel.ι f)
     set e : kernel g ≅ kernel (g ≫ kernel.ι f) := (isKernelCompMono (kernelIsKernel g) (kernel.ι f)
        rfl).conePointUniqueUpToIso (limit.isLimit (parallelPair (g ≫ kernel.ι f) 0))
-    exact isRepresentable_of_natIso _ (isoWhiskerRight e.symm (forget AddCommGrp))
+    exact isRepresentable_of_natIso _ (isoWhiskerRight e.symm (forget AddCommGrpCat))
   use kernel g, A, kernel.ι g, g, inferInstance, kernel.condition g
   exact ⟨hB, hA, ShortComplex.exact_of_f_is_kernel _ (kernelIsKernel g)⟩
 
 instance : (IsFinitelyPresented C).ContainsKernelsOfEpi where
   contains_kernel {K K'} u hu := by
-    have : Epi (C := Cᵒᵖ ⥤ AddCommGrp) (u : K.1 ⟶ K'.1) := (IsFinitelyPresented C).ι.map_epi u
+    have : Epi (C := Cᵒᵖ ⥤ AddCommGrpCat) (u : K.1 ⟶ K'.1) := (IsFinitelyPresented C).ι.map_epi u
     refine {contains_limit := ?_}
     obtain ⟨A, B, f, g, _, zero, hA, hB, exact⟩ :=
       (isFinitelyPresented_iff_shortComplex_representable K.1).mp K.2
     obtain ⟨A', B', f', g', _, zero', hA', hB', exact'⟩ :=
       (isFinitelyPresented_iff_shortComplex_representable K'.1).mp K'.2
-    set L := kernel (C := Cᵒᵖ ⥤ AddCommGrp) u
+    set L := kernel (C := Cᵒᵖ ⥤ AddCommGrpCat) u
     have hL : IsFinitelyPresented C L := by
       let S := kernelCokernelCompSequence g u
       have hS := kernelCokernelCompSequence_exact g u
@@ -598,9 +603,9 @@ instance : (IsFinitelyPresented C).ContainsKernelsOfEpi where
         (S.map' 0 1) (S.map' 1 2 one_le_two this) (hS.toIsComplex.zero 0 (by omega)) h₀ h₁
         (hS.exact 0 (by omega))
     refine ⟨KernelFork.ofι (C := FinitelyPresented C) (Z := ⟨L, hL⟩) (kernel.ι u
-      (C := Cᵒᵖ ⥤ AddCommGrp)) (kernel.condition u (C := Cᵒᵖ ⥤ AddCommGrp)),
+      (C := Cᵒᵖ ⥤ AddCommGrpCat)) (kernel.condition u (C := Cᵒᵖ ⥤ AddCommGrpCat)),
       Nonempty.intro {lift s := ?_, fac s j := ?_, uniq s m hm := ?_}⟩
-    · refine kernel.lift u (C := Cᵒᵖ ⥤ AddCommGrp) (s.π.app WalkingParallelPair.zero) ?_
+    · refine kernel.lift u (C := Cᵒᵖ ⥤ AddCommGrpCat) (s.π.app WalkingParallelPair.zero) ?_
       have := s.π.naturality WalkingParallelPairHom.left
       dsimp at this
       rw [id_comp] at this; rw [← this]
@@ -611,12 +616,12 @@ instance : (IsFinitelyPresented C).ContainsKernelsOfEpi where
       | WalkingParallelPair.zero => dsimp; simp
       | WalkingParallelPair.one =>
         dsimp
-        erw [kernel.condition u (C := Cᵒᵖ ⥤ AddCommGrp)]; rw [comp_zero]
+        erw [kernel.condition u (C := Cᵒᵖ ⥤ AddCommGrpCat)]; rw [comp_zero]
         have := s.π.naturality WalkingParallelPairHom.right
         dsimp at this
         rw [id_comp, comp_zero] at this
         exact this.symm
-    · rw [← cancel_mono (kernel.ι u (C := Cᵒᵖ ⥤ AddCommGrp))]
+    · rw [← cancel_mono (kernel.ι u (C := Cᵒᵖ ⥤ AddCommGrpCat))]
       dsimp; simp only [kernel.lift_ι]
       exact hm WalkingParallelPair.zero
 

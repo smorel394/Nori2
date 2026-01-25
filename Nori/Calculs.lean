@@ -26,16 +26,8 @@ noncomputable def contract₁ :
   map u := ComposableArrows.homMk₂ 0 (u.app zero) (u.app two)
     (by dsimp; simp) (by change (_ ≫ _) ≫ _ = _ ≫ _ ≫ _
                          rw [assoc, u.naturality, u.naturality_assoc])
-  map_id X := by
-    ext
-    · dsimp; simp
-    · dsimp
-    · dsimp; rfl
-  map_comp _ _ := by
-    ext
-    · dsimp; simp
-    · dsimp
-    · dsimp; rfl
+--  map_id X := by aesop_cat
+--  map_comp _ _ := by aesop_cat
 
 variable {C}
 
@@ -417,13 +409,7 @@ noncomputable def homology : ComposableArrows C 2 ⥤ ComposableArrows C 2 where
       rw [biprod.ext_to_iff, biprod.ext_from_iff]
       simp only [biprod.map_fst, BinaryBicone.inl_fst_assoc, assoc,
         BinaryBicone.inr_fst_assoc, zero_comp, biprod.map_snd]
-      refine ⟨⟨?_, ?_⟩, ?_⟩
-      · change _ = _ ≫ biprod.map _ _ ≫ biprod.map _ _ ≫ _
-        simp
-      · change _ = _ ≫ biprod.map _ _ ≫ biprod.map _ _ ≫ _
-        simp
-      · change _ = biprod.map _ _ ≫ biprod.map _ _ ≫ _
-        simp
+      refine ⟨⟨?_, ?_⟩, ?_⟩ <;> simp
 
 noncomputable def homologyπ : cycles C ⟶ homology C where
   app X := ComposableArrows.homMk₂ 0 biprod.inl biprod.inl (by dsimp [cycles]; simp)

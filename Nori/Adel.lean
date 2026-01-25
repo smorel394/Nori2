@@ -44,7 +44,7 @@ instance : Congruence (homotopic (C := C)) where
       dsimp
       simp only [Fin.isValue, homOfLE_leOfHom, Preadditive.add_comp, Preadditive.comp_add]
       abel
-  compLeft u _ _ h := by
+  comp_left u _ _ h := by
     obtain ⟨σ₁, σ₂, eq⟩ := h
     use u.app one ≫ σ₁, u.app two ≫ σ₂
     rw [NatTrans.comp_app, eq]
@@ -53,7 +53,7 @@ instance : Congruence (homotopic (C := C)) where
       add_right_inj]
     conv_lhs => rw [← assoc, ← NatTrans.naturality, assoc]
     rfl
-  compRight v h := by
+  comp_right v h := by
     obtain ⟨σ₁, σ₂, eq⟩ := h
     use σ₁ ≫ v.app zero, σ₂ ≫ v.app one
     rw [NatTrans.comp_app, eq]
@@ -370,7 +370,7 @@ noncomputable def cocone_aux {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
   refine Cofork.ofπ ((quotient C).map (candπ u')) ?_
   suffices eq : (quotient C).map (u' ≫ (candπ u')) = (quotient C).map 0 by
     dsimp at eq ⊢
-    simp only [Fin.isValue, homOfLE_leOfHom, map_comp, Functor.map_zero, zero_comp] at eq ⊢
+    simp only [map_comp, Functor.map_zero, zero_comp] at eq ⊢
     exact eq
   exact (quotient_map_eq_iff _ _).mpr (candcondition u')
 
@@ -522,7 +522,7 @@ noncomputable def cone_aux {X' Y' : ComposableArrows C 2} (u' : X' ⟶ Y') :
   refine Fork.ofι ((quotient C).map (candι u')) ?_
   suffices eq : (quotient C).map (candι u' ≫ u') = (quotient C).map 0 by
     dsimp at eq ⊢
-    simp only [Fin.isValue, homOfLE_leOfHom, map_comp, Functor.map_zero, comp_zero] at eq ⊢
+    simp only [map_comp, Functor.map_zero, comp_zero] at eq ⊢
     exact eq
   exact (quotient_map_eq_iff _ _).mpr (candcondition u')
 
