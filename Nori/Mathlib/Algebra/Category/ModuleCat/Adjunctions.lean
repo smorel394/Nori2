@@ -370,5 +370,63 @@ def liftUnique (F : C ⥤ D) (L : Free R C ⥤ D) [L.Additive] [L.Linear R]
     (α : embedding R C ⋙ L ≅ F) : L ≅ lift R F :=
   ext R (α.trans (embeddingLiftIso R F).symm)
 
+def liftNatTrans {F G : C ⥤ D} (u : F ⟶ G) : lift ℤ F ⟶ lift ℤ G where
+  app := u.app
+  naturality A B f := by
+    apply Finsupp.induction_linear
+      (motive := fun f ↦ (lift ℤ F).map f ≫ u.app B = u.app A ≫ (lift ℤ G).map f)
+    · simp
+    · intro _ _ eqf eqg
+      rw [Functor.map_add, Preadditive.add_comp, eqf, eqg, Functor.map_add, Preadditive.comp_add]
+    · simp
+
+-- Take `R` equal to `ℤ` to simplify.
+
+def liftFunctor : (C ⥤ D) ⥤ (Free ℤ C ⥤+ D) where
+  obj F := {obj := lift ℤ F, property := by rw [additiveFunctor_iff]; infer_instance}
+  map u := {hom := liftNatTrans u}
+--  map_id := by aesop_cat
+--  map_comp := by aesop_cat
+
+def liftInverse : (Free ℤ C ⥤+ D) ⥤ (C ⥤ D) where
+  obj F := Free.embedding ℤ C ⋙ F.obj
+  map u := (embedding ℤ C).whiskerLeft u.hom
+--  map_id := by aesop_cat
+--  map_comp := by aesop_cat
+
+def liftEquivalence : (Free ℤ C ⥤+ D) ≌ (C ⥤ D) where
+  functor := liftInverse
+  inverse := liftFunctor
+  unitIso := by
+    refine NatIso.ofComponents (fun F ↦ ?_) ?_
+    · dsimp [liftInverse, liftFunctor]
+      refine ObjectProperty.isoMk _ ?_
+      refine NatIso.ofComponents (fun X ↦ Iso.refl _) (fun f ↦ ?_)
+      simp only [Iso.refl_hom, Category.comp_id, Category.id_comp]
+      apply Finsupp.induction_linear
+        (motive := fun f ↦ F.obj.map f = (lift ℤ (embedding ℤ C ⋙ F.obj)).map f)
+      · dsimp; simp
+      · intro _ _ eqf eqg
+        rw [Functor.map_add, eqf, eqg, Functor.map_add]
+      · intro f n
+        simp only [lift_map, Functor.comp_obj, embedding_obj, Functor.comp_map, embedding_map,
+          zero_smul, sum_single_index]
+        rw [← Finsupp.smul_single_one, Functor.map_zsmul]
+    · intro F G u
+      ext
+      dsimp [liftFunctor, liftInverse, liftNatTrans]
+      simp
+  counitIso := by
+    refine NatIso.ofComponents (fun F ↦ ?_) ?_
+    · refine NatIso.ofComponents (fun _ ↦ Iso.refl _) ?_
+      intro _ _ f
+      dsimp [liftFunctor, liftInverse]
+      simp
+    · intro _ _ u
+      ext
+      dsimp [liftFunctor, liftInverse, liftNatTrans]
+      simp
+--  functor_unitIso_comp F := by aesop_cat
+
 end Free
 end CategoryTheory

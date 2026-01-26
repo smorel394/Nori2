@@ -448,6 +448,7 @@ def ext {F G : Mat_ C ⥤ D} [Functor.Additive F] [Functor.Additive G]
     (α : embedding C ⋙ F ≅ embedding C ⋙ G) : F ≅ G :=
   liftUnique (embedding C ⋙ G) _ α ≪≫ (liftUnique _ _ (Iso.refl _)).symm
 
+
 /-- Natural isomorphism needed in the construction of `equivalenceSelfOfHasFiniteBiproducts`.
 -/
 def equivalenceSelfOfHasFiniteBiproductsAux [HasFiniteBiproducts C] :
@@ -481,6 +482,43 @@ theorem equivalenceSelfOfHasFiniteBiproducts_inverse {C : Type (u₁ + 1)} [Larg
     [Preadditive C] [HasFiniteBiproducts C] :
     (equivalenceSelfOfHasFiniteBiproducts C).inverse = embedding C :=
   rfl
+
+@[simp]
+def liftNatTrans {F G : C ⥤ D} [F.Additive] [G.Additive] (u : F ⟶ G) : lift F ⟶ lift G where
+      app X := biproduct.map (fun n ↦ u.app (X.X n))
+--      naturality := by aesop_cat
+
+def liftFunctor : (C ⥤+ D) ⥤ (Mat_ C ⥤+ D) where
+  obj F := {obj := Mat_.lift F.obj, property := by rw [additiveFunctor_iff]; infer_instance}
+  map u := {hom := liftNatTrans u.hom}
+--  map_id X := by aesop_cat
+--  map_comp := by aesop_cat
+
+def liftInverse : (Mat_ C ⥤+ D) ⥤ (C ⥤+ D) where
+  obj F := {obj := Mat_.embedding C ⋙ F.obj,
+            property := by rw [additiveFunctor_iff]; infer_instance}
+  map u := {hom := (embedding C).whiskerLeft u.hom}
+--  map_id := by aesop_cat
+--  map_comp := by aesop_cat
+
+def liftEquivalence : (Mat_ C ⥤+ D) ≌ (C ⥤+ D) where
+  functor := liftInverse
+  inverse := liftFunctor
+  unitIso := by
+    refine NatIso.ofComponents (fun F ↦ ?_) ?_
+    · refine ObjectProperty.isoMk _ (NatIso.ofComponents (fun X ↦ ?_) ?_)
+      · dsimp [liftFunctor, liftInverse]
+        sorry
+      · sorry
+    · sorry
+  counitIso := by
+    refine NatIso.ofComponents (fun F ↦ ?_) ?_
+    · refine ObjectProperty.isoMk _ (NatIso.ofComponents (fun X ↦ ?_) ?_)
+      · dsimp [liftFunctor, liftInverse]
+        sorry
+      · sorry
+    · sorry
+  functor_unitIso_comp := sorry
 
 end Mat_
 

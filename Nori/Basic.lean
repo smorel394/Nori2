@@ -1,4 +1,4 @@
-import Mathlib.CategoryTheory.PathCategory.Basic
+import Nori.Mathlib.CategoryTheory.PathCategory.Basic
 import Nori.Mathlib.Algebra.Category.ModuleCat.Adjunctions
 import Nori.Mathlib.CategoryTheory.Preadditive.Mat
 import Nori.Mathlib.CategoryTheory.NatIso
